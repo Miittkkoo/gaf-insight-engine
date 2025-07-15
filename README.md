@@ -38,6 +38,13 @@ The current system provides:
 - [ ] Add automated testing for critical analysis functions
 - [ ] Implement proper encryption for stored credentials (currently basic JSON storage)
 
+### UI/UX Improvements
+- [ ] **Journal Edit Dialog Reorganization**: Reorganize the field layout in the journal edit dialog (`JournalEditDialog.tsx`) to match the structure and organization of the daily entry form (`DailyEntry.tsx`)
+  - Follow the same tab structure (Morning/Day/Evening)
+  - Align field grouping and order to maintain consistency
+  - Ensure both interfaces provide the same user experience flow
+  - Current status: Field values have been aligned with database constraints, but layout needs restructuring
+
 ## How can I edit this code?
 
 There are several ways of editing your application.
