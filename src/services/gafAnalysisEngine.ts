@@ -119,45 +119,10 @@ export class GAFAnalysisEngine {
         }
       }
     } catch (error) {
-      console.warn('Failed to fetch real Garmin data, using mock data:', error);
     }
-
-    // Fallback to mock data if real data unavailable
-    const mockGarminData = {
-      hrv: {
-        score: 42 + Math.random() * 25, // 42-67 range
-        sevenDayAvg: 45 + Math.random() * 15,
-        status: this.getHRVStatus(45 + Math.random() * 15),
-        lastNight: 40 + Math.random() * 20
-      },
-      bodyBattery: {
-        start: 85 + Math.random() * 10,
-        end: 25 + Math.random() * 15,
-        min: 15 + Math.random() * 10,
-        max: 95 + Math.random() * 5,
-        charged: 70 + Math.random() * 15,
-        drained: 65 + Math.random() * 20
-      },
-      sleep: {
-        duration: 420 + Math.random() * 120, // 7-9 hours
-        deepSleep: 60 + Math.random() * 30,
-        lightSleep: 240 + Math.random() * 60,
-        remSleep: 90 + Math.random() * 30,
-        awake: 15 + Math.random() * 15,
-        quality: this.getSleepQuality(420 + Math.random() * 120)
-      },
-      stress: {
-        avg: 25 + Math.random() * 30,
-        max: 60 + Math.random() * 30,
-        restingPeriods: 4 + Math.random() * 6
-      },
-      activities: [],
-      steps: Math.floor(5000 + Math.random() * 10000),
-      calories: Math.floor(1800 + Math.random() * 800),
-      activeMinutes: Math.floor(30 + Math.random() * 90)
-    };
-
-    return this.applyHRVTimingLogic(mockGarminData, date);
+    
+    console.warn('Failed to fetch Garmin data, returning null for analysis');
+    return null;
   }
 
   private applyHRVTimingLogic(garminData: any, date: Date) {

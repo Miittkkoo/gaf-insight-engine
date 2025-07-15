@@ -19,43 +19,19 @@ export const PatternTimeline: React.FC<PatternTimelineProps> = ({
   patterns = [], 
   className = "" 
 }) => {
-  // Mock pattern data for demonstration
-  const mockPatterns = [
+  // Default pattern data when no real patterns available
+  const defaultPatterns = [
     {
-      date: '2024-07-15',
-      type: 'sleep_optimization',
-      impact: 'positive',
-      confidence: 0.92,
-      description: 'Optimaler Schlaf führte zu +15% HRV Verbesserung',
-      metrics: { hrv: 58, sleep: 485 }
-    },
-    {
-      date: '2024-07-14',
-      type: 'alcohol_impact',
-      impact: 'negative',
-      confidence: 0.78,
-      description: 'Alkoholkonsum reduzierte HRV um 12% am Folgetag',
-      metrics: { hrv: 42, alcohol: 2 }
-    },
-    {
-      date: '2024-07-13',
-      type: 'stress_recovery',
+      date: new Date().toISOString().split('T')[0],
+      type: 'data_collection',
       impact: 'neutral',
-      confidence: 0.65,
-      description: 'Meditation kompensierte hohen Arbeitsstress',
-      metrics: { stress: 45, recovery: 78 }
-    },
-    {
-      date: '2024-07-12',
-      type: 'training_adaptation',
-      impact: 'positive',
-      confidence: 0.85,
-      description: 'Optimale Trainingsintensität verbesserte Recovery',
-      metrics: { hrv: 55, training: 'moderate' }
+      confidence: 1.0,
+      description: 'Sammle echte Daten für Pattern-Erkennung',
+      metrics: { data_points: patterns.length }
     }
   ];
 
-  const displayPatterns = patterns.length > 0 ? patterns : mockPatterns;
+  const displayPatterns = patterns.length > 0 ? patterns : defaultPatterns;
 
   const getPatternIcon = (impact: string) => {
     switch (impact) {
