@@ -198,29 +198,12 @@ const DailyEntry = () => {
         updated_at: new Date().toISOString()
       };
 
-      // First try to find existing record
-      const { data: existingRecord } = await supabase
+      // Use UPSERT with the unique constraint
+      const { error } = await supabase
         .from('daily_metrics')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('metric_date', formData.metric_date)
-        .maybeSingle();
-
-      let error;
-      if (existingRecord) {
-        // Update existing record
-        const { error: updateError } = await supabase
-          .from('daily_metrics')
-          .update(dataToSave)
-          .eq('id', existingRecord.id);
-        error = updateError;
-      } else {
-        // Insert new record
-        const { error: insertError } = await supabase
-          .from('daily_metrics')
-          .insert(dataToSave);
-        error = insertError;
-      }
+        .upsert(dataToSave, {
+          onConflict: 'user_id,metric_date'
+        });
 
       if (error) {
         toast({
