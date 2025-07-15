@@ -42,6 +42,7 @@ export const useDailyMetrics = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
+  // NEUE EINFACHE ARCHITEKTUR: Check-then-Insert oder Update
   const saveMetrics = async (data: DailyMetricsData) => {
     setIsLoading(true);
     try {
@@ -50,37 +51,78 @@ export const useDailyMetrics = () => {
         throw new Error('Nicht angemeldet');
       }
 
-      // Debug logging für bessere Fehleranalyse
-      console.log('Saving metrics:', {
-        user_id: user.id,
-        metric_date: data.metric_date,
-        has_data: !!data
-      });
+      console.log('Saving metrics for user:', user.id, 'date:', data.metric_date);
 
-      const { data: result, error } = await supabase.rpc('save_daily_metrics_final', {
-        p_user_id: user.id,
-        p_metric_date: data.metric_date,
-        p_data: data as any
-      });
+      // SCHRITT 1: Prüfe ob Eintrag bereits existiert
+      const { data: existingEntry, error: checkError } = await supabase
+        .from('daily_metrics')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('metric_date', data.metric_date)
+        .maybeSingle();
 
-      if (error) {
-        console.error('Save error details:', {
-          message: error.message,
-          code: error.code,
-          details: error.details,
-          hint: error.hint
-        });
-        throw error;
+      if (checkError) {
+        console.error('Check error:', checkError);
+        throw checkError;
       }
 
-      console.log('Save successful:', result);
+      // SCHRITT 2: Entscheide INSERT oder UPDATE
+      if (existingEntry) {
+        // UPDATE existierender Eintrag
+        console.log('Updating existing entry with ID:', existingEntry.id);
+        
+        const { data: result, error: updateError } = await supabase
+          .from('daily_metrics')
+          .update({
+            ...data,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', existingEntry.id)
+          .eq('user_id', user.id) // Sicherheit: nur eigene Einträge
+          .select()
+          .single();
 
-      toast({
-        title: "Erfolgreich gespeichert",
-        description: "Ihre Daten wurden erfolgreich gespeichert"
-      });
+        if (updateError) {
+          console.error('Update error:', updateError);
+          throw updateError;
+        }
 
-      return result;
+        console.log('Update successful:', result);
+        toast({
+          title: "Erfolgreich aktualisiert",
+          description: "Ihre Daten wurden erfolgreich aktualisiert"
+        });
+
+        return result;
+      } else {
+        // INSERT neuer Eintrag
+        console.log('Creating new entry');
+        
+        const { data: result, error: insertError } = await supabase
+          .from('daily_metrics')
+          .insert({
+            ...data,
+            user_id: user.id,
+            hrv_reflects_date: new Date(new Date(data.metric_date).getTime() - 24 * 60 * 60 * 1000).toISOString().split('T')[0], // Vortag
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          })
+          .select()
+          .single();
+
+        if (insertError) {
+          console.error('Insert error:', insertError);
+          throw insertError;
+        }
+
+        console.log('Insert successful:', result);
+        toast({
+          title: "Erfolgreich gespeichert",
+          description: "Ihre Daten wurden erfolgreich gespeichert"
+        });
+
+        return result;
+      }
     } catch (error: any) {
       console.error('Save error:', error);
       toast({
@@ -94,6 +136,7 @@ export const useDailyMetrics = () => {
     }
   };
 
+  // UPDATE für Journal (einfacher direkter Update)
   const updateMetrics = async (id: string, updates: Partial<DailyMetricsData>) => {
     setIsLoading(true);
     try {
@@ -102,28 +145,25 @@ export const useDailyMetrics = () => {
         throw new Error('Nicht angemeldet');
       }
 
-      // First get the current entry to get the metric_date
-      const { data: currentEntry, error: fetchError } = await supabase
+      console.log('Updating entry ID:', id);
+
+      const { data: result, error } = await supabase
         .from('daily_metrics')
-        .select('metric_date')
+        .update({
+          ...updates,
+          updated_at: new Date().toISOString()
+        })
         .eq('id', id)
+        .eq('user_id', user.id) // Sicherheit: nur eigene Einträge
+        .select()
         .single();
 
-      if (fetchError) {
-        throw fetchError;
-      }
-
-      // Use save_daily_metrics_final function for updates too
-      const { data: result, error } = await supabase.rpc('save_daily_metrics_final', {
-        p_user_id: user.id,
-        p_metric_date: currentEntry.metric_date,
-        p_data: updates as any
-      });
-
       if (error) {
+        console.error('Update error:', error);
         throw error;
       }
 
+      console.log('Update successful:', result);
       toast({
         title: "Erfolgreich aktualisiert",
         description: "Eintrag wurde erfolgreich aktualisiert"
@@ -152,7 +192,7 @@ export const useDailyMetrics = () => {
         .maybeSingle();
 
       if (error && error.code !== 'PGRST116') {
-        console.error('Error loading data:', error);
+        console.error('Load error:', error);
         throw error;
       }
 
