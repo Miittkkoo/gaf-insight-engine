@@ -62,8 +62,7 @@ export const useDailyMetrics = () => {
           hrv_reflects_date: new Date(new Date(data.metric_date).getTime() - 24 * 60 * 60 * 1000).toISOString().split('T')[0], // Vortag
           updated_at: new Date().toISOString()
         }, {
-          onConflict: 'user_id,metric_date',
-          ignoreDuplicates: false
+          onConflict: 'user_id,metric_date'
         })
         .select()
         .single();
