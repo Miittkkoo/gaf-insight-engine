@@ -42,7 +42,7 @@ export const useDailyMetrics = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  // NEUE EINFACHE ARCHITEKTUR: Check-then-Insert oder Update
+  // UPSERT-basierte Speicherung für Race-Condition-Schutz
   const saveMetrics = async (data: DailyMetricsData) => {
     setIsLoading(true);
     try {
@@ -53,76 +53,33 @@ export const useDailyMetrics = () => {
 
       console.log('Saving metrics for user:', user.id, 'date:', data.metric_date);
 
-      // SCHRITT 1: Prüfe ob Eintrag bereits existiert
-      const { data: existingEntry, error: checkError } = await supabase
+      // UPSERT: Atomische Insert-oder-Update Operation
+      const { data: result, error } = await supabase
         .from('daily_metrics')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('metric_date', data.metric_date)
-        .maybeSingle();
+        .upsert({
+          ...data,
+          user_id: user.id,
+          hrv_reflects_date: new Date(new Date(data.metric_date).getTime() - 24 * 60 * 60 * 1000).toISOString().split('T')[0], // Vortag
+          updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'user_id,metric_date',
+          ignoreDuplicates: false
+        })
+        .select()
+        .single();
 
-      if (checkError) {
-        console.error('Check error:', checkError);
-        throw checkError;
+      if (error) {
+        console.error('Upsert error:', error);
+        throw error;
       }
 
-      // SCHRITT 2: Entscheide INSERT oder UPDATE
-      if (existingEntry) {
-        // UPDATE existierender Eintrag
-        console.log('Updating existing entry with ID:', existingEntry.id);
-        
-        const { data: result, error: updateError } = await supabase
-          .from('daily_metrics')
-          .update({
-            ...data,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', existingEntry.id)
-          .eq('user_id', user.id) // Sicherheit: nur eigene Einträge
-          .select()
-          .single();
+      console.log('Upsert successful:', result);
+      toast({
+        title: "Erfolgreich gespeichert",
+        description: "Ihre Daten wurden erfolgreich gespeichert"
+      });
 
-        if (updateError) {
-          console.error('Update error:', updateError);
-          throw updateError;
-        }
-
-        console.log('Update successful:', result);
-        toast({
-          title: "Erfolgreich aktualisiert",
-          description: "Ihre Daten wurden erfolgreich aktualisiert"
-        });
-
-        return result;
-      } else {
-        // INSERT neuer Eintrag
-        console.log('Creating new entry');
-        
-        const { data: result, error: insertError } = await supabase
-          .from('daily_metrics')
-          .insert({
-            ...data,
-            user_id: user.id,
-            hrv_reflects_date: new Date(new Date(data.metric_date).getTime() - 24 * 60 * 60 * 1000).toISOString().split('T')[0], // Vortag
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          })
-          .select()
-          .single();
-
-        if (insertError) {
-          console.error('Insert error:', insertError);
-          throw insertError;
-        }
-
-        console.log('Insert successful:', result);
-        toast({
-          title: "Erfolgreich gespeichert",
-          description: "Ihre Daten wurden erfolgreich gespeichert"
-        });
-
-        return result;
-      }
+      return result;
     } catch (error: any) {
       console.error('Save error:', error);
       toast({
