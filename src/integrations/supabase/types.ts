@@ -14,13 +14,624 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      daily_metrics: {
+        Row: {
+          abendliche_nahrung: string | null
+          alkohol_details: string | null
+          alkohol_konsum: string | null
+          alkohol_timing: string | null
+          anomaly_scores: Json | null
+          anpassungen_morgen: string | null
+          aufwach_gefuehl: string | null
+          body_status: string | null
+          can_validate_patterns: boolean | null
+          created_at: string | null
+          custom_variables: Json | null
+          daily_embedding: string | null
+          data_completeness: number | null
+          data_quality_score: number | null
+          detected_correlations: Json | null
+          emotionale_belastung: string | null
+          energie_budget: string | null
+          energie_level_ende: string | null
+          erkenntnisse: string | null
+          erwartete_hrv_morgen: string | null
+          events_bilanz: string | null
+          fokus_heute: string | null
+          garmin_data: Json | null
+          garmin_last_sync: string | null
+          gedanken_aktivitaet: string | null
+          groesster_widerstand: string | null
+          hrv_reflects_date: string
+          hrv_score: number | null
+          hrv_status: string | null
+          id: string
+          koerperliche_symptome: string[] | null
+          kognitive_verarbeitung: string[] | null
+          kontemplative_aktivitaeten: string[] | null
+          letzte_hauptmahlzeit: string | null
+          lifestyle_embedding: string | null
+          lifestyle_factors: Json | null
+          manual_overrides: Json | null
+          meditation_heute: boolean | null
+          meditation_timing: string[] | null
+          metric_date: string
+          mind_status: string | null
+          mood_boosting_events: string[] | null
+          mood_killing_events: string[] | null
+          notizen: string | null
+          oliver_arbeit_heute: boolean | null
+          regenerations_bedarf_morgen: string | null
+          schlaf_bereitschaft: string | null
+          schlafenszeitpunkt: string | null
+          schlafqualitaet: string | null
+          soul_status: string | null
+          sport_heute: boolean | null
+          sport_intensitaet: string | null
+          stress_level: number | null
+          tag_bewertung: number | null
+          task_feeling: string | null
+          updated_at: string | null
+          user_id: string | null
+          verdauungsgefuehl: string | null
+          werte_gelebt: string[] | null
+          werte_kreis_balance: string | null
+          werte_zufriedenheit: number | null
+        }
+        Insert: {
+          abendliche_nahrung?: string | null
+          alkohol_details?: string | null
+          alkohol_konsum?: string | null
+          alkohol_timing?: string | null
+          anomaly_scores?: Json | null
+          anpassungen_morgen?: string | null
+          aufwach_gefuehl?: string | null
+          body_status?: string | null
+          can_validate_patterns?: boolean | null
+          created_at?: string | null
+          custom_variables?: Json | null
+          daily_embedding?: string | null
+          data_completeness?: number | null
+          data_quality_score?: number | null
+          detected_correlations?: Json | null
+          emotionale_belastung?: string | null
+          energie_budget?: string | null
+          energie_level_ende?: string | null
+          erkenntnisse?: string | null
+          erwartete_hrv_morgen?: string | null
+          events_bilanz?: string | null
+          fokus_heute?: string | null
+          garmin_data?: Json | null
+          garmin_last_sync?: string | null
+          gedanken_aktivitaet?: string | null
+          groesster_widerstand?: string | null
+          hrv_reflects_date: string
+          hrv_score?: number | null
+          hrv_status?: string | null
+          id?: string
+          koerperliche_symptome?: string[] | null
+          kognitive_verarbeitung?: string[] | null
+          kontemplative_aktivitaeten?: string[] | null
+          letzte_hauptmahlzeit?: string | null
+          lifestyle_embedding?: string | null
+          lifestyle_factors?: Json | null
+          manual_overrides?: Json | null
+          meditation_heute?: boolean | null
+          meditation_timing?: string[] | null
+          metric_date: string
+          mind_status?: string | null
+          mood_boosting_events?: string[] | null
+          mood_killing_events?: string[] | null
+          notizen?: string | null
+          oliver_arbeit_heute?: boolean | null
+          regenerations_bedarf_morgen?: string | null
+          schlaf_bereitschaft?: string | null
+          schlafenszeitpunkt?: string | null
+          schlafqualitaet?: string | null
+          soul_status?: string | null
+          sport_heute?: boolean | null
+          sport_intensitaet?: string | null
+          stress_level?: number | null
+          tag_bewertung?: number | null
+          task_feeling?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          verdauungsgefuehl?: string | null
+          werte_gelebt?: string[] | null
+          werte_kreis_balance?: string | null
+          werte_zufriedenheit?: number | null
+        }
+        Update: {
+          abendliche_nahrung?: string | null
+          alkohol_details?: string | null
+          alkohol_konsum?: string | null
+          alkohol_timing?: string | null
+          anomaly_scores?: Json | null
+          anpassungen_morgen?: string | null
+          aufwach_gefuehl?: string | null
+          body_status?: string | null
+          can_validate_patterns?: boolean | null
+          created_at?: string | null
+          custom_variables?: Json | null
+          daily_embedding?: string | null
+          data_completeness?: number | null
+          data_quality_score?: number | null
+          detected_correlations?: Json | null
+          emotionale_belastung?: string | null
+          energie_budget?: string | null
+          energie_level_ende?: string | null
+          erkenntnisse?: string | null
+          erwartete_hrv_morgen?: string | null
+          events_bilanz?: string | null
+          fokus_heute?: string | null
+          garmin_data?: Json | null
+          garmin_last_sync?: string | null
+          gedanken_aktivitaet?: string | null
+          groesster_widerstand?: string | null
+          hrv_reflects_date?: string
+          hrv_score?: number | null
+          hrv_status?: string | null
+          id?: string
+          koerperliche_symptome?: string[] | null
+          kognitive_verarbeitung?: string[] | null
+          kontemplative_aktivitaeten?: string[] | null
+          letzte_hauptmahlzeit?: string | null
+          lifestyle_embedding?: string | null
+          lifestyle_factors?: Json | null
+          manual_overrides?: Json | null
+          meditation_heute?: boolean | null
+          meditation_timing?: string[] | null
+          metric_date?: string
+          mind_status?: string | null
+          mood_boosting_events?: string[] | null
+          mood_killing_events?: string[] | null
+          notizen?: string | null
+          oliver_arbeit_heute?: boolean | null
+          regenerations_bedarf_morgen?: string | null
+          schlaf_bereitschaft?: string | null
+          schlafenszeitpunkt?: string | null
+          schlafqualitaet?: string | null
+          soul_status?: string | null
+          sport_heute?: boolean | null
+          sport_intensitaet?: string | null
+          stress_level?: number | null
+          tag_bewertung?: number | null
+          task_feeling?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          verdauungsgefuehl?: string | null
+          werte_gelebt?: string[] | null
+          werte_kreis_balance?: string | null
+          werte_zufriedenheit?: number | null
+        }
+        Relationships: []
+      }
+      gaf_analysis_results: {
+        Row: {
+          alerts: Json[] | null
+          analysis_date: string
+          analysis_type: string
+          confidence_level: number | null
+          created_at: string | null
+          custom_insights: Json | null
+          data_completeness: number | null
+          detected_patterns: Json[] | null
+          executive_embedding: string | null
+          executive_summary: string | null
+          experimental_data: Json | null
+          framework_embedding: string | null
+          framework_score: Json
+          id: string
+          ml_model_version: string | null
+          pattern_confidence_scores: Json | null
+          processing_time_ms: number | null
+          recommendation_embeddings: string[] | null
+          recommendations: Json[] | null
+          risk_assessment: Json | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          alerts?: Json[] | null
+          analysis_date: string
+          analysis_type: string
+          confidence_level?: number | null
+          created_at?: string | null
+          custom_insights?: Json | null
+          data_completeness?: number | null
+          detected_patterns?: Json[] | null
+          executive_embedding?: string | null
+          executive_summary?: string | null
+          experimental_data?: Json | null
+          framework_embedding?: string | null
+          framework_score?: Json
+          id?: string
+          ml_model_version?: string | null
+          pattern_confidence_scores?: Json | null
+          processing_time_ms?: number | null
+          recommendation_embeddings?: string[] | null
+          recommendations?: Json[] | null
+          risk_assessment?: Json | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          alerts?: Json[] | null
+          analysis_date?: string
+          analysis_type?: string
+          confidence_level?: number | null
+          created_at?: string | null
+          custom_insights?: Json | null
+          data_completeness?: number | null
+          detected_patterns?: Json[] | null
+          executive_embedding?: string | null
+          executive_summary?: string | null
+          experimental_data?: Json | null
+          framework_embedding?: string | null
+          framework_score?: Json
+          id?: string
+          ml_model_version?: string | null
+          pattern_confidence_scores?: Json | null
+          processing_time_ms?: number | null
+          recommendation_embeddings?: string[] | null
+          recommendations?: Json[] | null
+          risk_assessment?: Json | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      knowledge_base: {
+        Row: {
+          category: string
+          confidence_level: number
+          contradiction_count: number | null
+          correlation_mappings: Json | null
+          created_at: string | null
+          created_by: string | null
+          description: string
+          evidence_data: Json
+          id: string
+          knowledge_embedding: string | null
+          knowledge_type: string
+          last_validated_at: string | null
+          roi_data: Json | null
+          source: string | null
+          success_rate: number | null
+          title: string
+          training_examples: Json[] | null
+          updated_at: string | null
+          validation_count: number | null
+          variable_definitions: Json | null
+        }
+        Insert: {
+          category: string
+          confidence_level?: number
+          contradiction_count?: number | null
+          correlation_mappings?: Json | null
+          created_at?: string | null
+          created_by?: string | null
+          description: string
+          evidence_data?: Json
+          id?: string
+          knowledge_embedding?: string | null
+          knowledge_type: string
+          last_validated_at?: string | null
+          roi_data?: Json | null
+          source?: string | null
+          success_rate?: number | null
+          title: string
+          training_examples?: Json[] | null
+          updated_at?: string | null
+          validation_count?: number | null
+          variable_definitions?: Json | null
+        }
+        Update: {
+          category?: string
+          confidence_level?: number
+          contradiction_count?: number | null
+          correlation_mappings?: Json | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string
+          evidence_data?: Json
+          id?: string
+          knowledge_embedding?: string | null
+          knowledge_type?: string
+          last_validated_at?: string | null
+          roi_data?: Json | null
+          source?: string | null
+          success_rate?: number | null
+          title?: string
+          training_examples?: Json[] | null
+          updated_at?: string | null
+          validation_count?: number | null
+          variable_definitions?: Json | null
+        }
+        Relationships: []
+      }
+      pattern_history: {
+        Row: {
+          analysis_rules: Json | null
+          confidence_evolution: Json[] | null
+          created_at: string | null
+          custom_variables: Json | null
+          failed_predictions: number | null
+          feature_importance: Json | null
+          hypothesis_status: string | null
+          id: string
+          model_accuracy: number | null
+          next_validation_date: string | null
+          occurrences: Json[] | null
+          outcome_variables: Json
+          pattern_embedding: string | null
+          pattern_name: string
+          pattern_type: string
+          success_predictions: number | null
+          time_delay_hours: number
+          trigger_variables: Json
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          analysis_rules?: Json | null
+          confidence_evolution?: Json[] | null
+          created_at?: string | null
+          custom_variables?: Json | null
+          failed_predictions?: number | null
+          feature_importance?: Json | null
+          hypothesis_status?: string | null
+          id?: string
+          model_accuracy?: number | null
+          next_validation_date?: string | null
+          occurrences?: Json[] | null
+          outcome_variables?: Json
+          pattern_embedding?: string | null
+          pattern_name: string
+          pattern_type: string
+          success_predictions?: number | null
+          time_delay_hours?: number
+          trigger_variables?: Json
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          analysis_rules?: Json | null
+          confidence_evolution?: Json[] | null
+          created_at?: string | null
+          custom_variables?: Json | null
+          failed_predictions?: number | null
+          feature_importance?: Json | null
+          hypothesis_status?: string | null
+          id?: string
+          model_accuracy?: number | null
+          next_validation_date?: string | null
+          occurrences?: Json[] | null
+          outcome_variables?: Json
+          pattern_embedding?: string | null
+          pattern_name?: string
+          pattern_type?: string
+          success_predictions?: number | null
+          time_delay_hours?: number
+          trigger_variables?: Json
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      user_profiles: {
+        Row: {
+          analysis_settings: Json | null
+          attribute_definitions: Json | null
+          created_at: string | null
+          custom_attributes: Json | null
+          display_name: string | null
+          framework_baselines: Json | null
+          garmin_connected: boolean | null
+          garmin_credentials_encrypted: string | null
+          garmin_last_sync: string | null
+          hrv_baseline: Json | null
+          id: string
+          ml_preferences: Json | null
+          notification_preferences: Json | null
+          timezone: string | null
+          updated_at: string | null
+          user_embedding: string | null
+        }
+        Insert: {
+          analysis_settings?: Json | null
+          attribute_definitions?: Json | null
+          created_at?: string | null
+          custom_attributes?: Json | null
+          display_name?: string | null
+          framework_baselines?: Json | null
+          garmin_connected?: boolean | null
+          garmin_credentials_encrypted?: string | null
+          garmin_last_sync?: string | null
+          hrv_baseline?: Json | null
+          id: string
+          ml_preferences?: Json | null
+          notification_preferences?: Json | null
+          timezone?: string | null
+          updated_at?: string | null
+          user_embedding?: string | null
+        }
+        Update: {
+          analysis_settings?: Json | null
+          attribute_definitions?: Json | null
+          created_at?: string | null
+          custom_attributes?: Json | null
+          display_name?: string | null
+          framework_baselines?: Json | null
+          garmin_connected?: boolean | null
+          garmin_credentials_encrypted?: string | null
+          garmin_last_sync?: string | null
+          hrv_baseline?: Json | null
+          id?: string
+          ml_preferences?: Json | null
+          notification_preferences?: Json | null
+          timezone?: string | null
+          updated_at?: string | null
+          user_embedding?: string | null
+        }
+        Relationships: []
+      }
+      user_variable_definitions: {
+        Row: {
+          analysis_category: string | null
+          correlation_targets: string[] | null
+          created_at: string | null
+          default_value: Json | null
+          description: string | null
+          display_name: string
+          embedding_weight: number | null
+          feature_importance: number | null
+          id: string
+          options: Json | null
+          user_id: string | null
+          validation_rules: Json | null
+          variable_name: string
+          variable_type: string
+        }
+        Insert: {
+          analysis_category?: string | null
+          correlation_targets?: string[] | null
+          created_at?: string | null
+          default_value?: Json | null
+          description?: string | null
+          display_name: string
+          embedding_weight?: number | null
+          feature_importance?: number | null
+          id?: string
+          options?: Json | null
+          user_id?: string | null
+          validation_rules?: Json | null
+          variable_name: string
+          variable_type: string
+        }
+        Update: {
+          analysis_category?: string | null
+          correlation_targets?: string[] | null
+          created_at?: string | null
+          default_value?: Json | null
+          description?: string | null
+          display_name?: string
+          embedding_weight?: number | null
+          feature_importance?: number | null
+          id?: string
+          options?: Json | null
+          user_id?: string | null
+          validation_rules?: Json | null
+          variable_name?: string
+          variable_type?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      binary_quantize: {
+        Args: { "": string } | { "": unknown }
+        Returns: unknown
+      }
+      halfvec_avg: {
+        Args: { "": number[] }
+        Returns: unknown
+      }
+      halfvec_out: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      halfvec_send: {
+        Args: { "": unknown }
+        Returns: string
+      }
+      halfvec_typmod_in: {
+        Args: { "": unknown[] }
+        Returns: number
+      }
+      hnsw_bit_support: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      hnsw_halfvec_support: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      hnsw_sparsevec_support: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      hnswhandler: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      ivfflat_bit_support: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      ivfflat_halfvec_support: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      ivfflathandler: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      l2_norm: {
+        Args: { "": unknown } | { "": unknown }
+        Returns: number
+      }
+      l2_normalize: {
+        Args: { "": string } | { "": unknown } | { "": unknown }
+        Returns: unknown
+      }
+      sparsevec_out: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      sparsevec_send: {
+        Args: { "": unknown }
+        Returns: string
+      }
+      sparsevec_typmod_in: {
+        Args: { "": unknown[] }
+        Returns: number
+      }
+      validate_pattern_correlation: {
+        Args: {
+          trigger_date: string
+          outcome_date: string
+          min_delay_hours?: number
+        }
+        Returns: boolean
+      }
+      vector_avg: {
+        Args: { "": number[] }
+        Returns: string
+      }
+      vector_dims: {
+        Args: { "": string } | { "": unknown }
+        Returns: number
+      }
+      vector_norm: {
+        Args: { "": string }
+        Returns: number
+      }
+      vector_out: {
+        Args: { "": string }
+        Returns: unknown
+      }
+      vector_send: {
+        Args: { "": string }
+        Returns: string
+      }
+      vector_typmod_in: {
+        Args: { "": unknown[] }
+        Returns: number
+      }
     }
     Enums: {
       [_ in never]: never
