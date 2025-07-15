@@ -39,7 +39,12 @@ export function UserProfile() {
 
   const loadProfile = async () => {
     try {
-      if (!user) return;
+      if (!user) {
+        console.log('No user found in loadProfile');
+        return;
+      }
+
+      console.log('Loading profile for user:', user.id);
 
       const { data, error } = await supabase
         .from('user_profiles')
@@ -47,12 +52,40 @@ export function UserProfile() {
         .eq('id', user.id)
         .single();
 
-      if (error) throw error;
-      
-      setProfile(data);
+      console.log('Profile query result:', { data, error });
 
-      // Try to load existing Garmin credentials
-      if (data.garmin_credentials_encrypted) {
+      if (error) {
+        if (error.code === 'PGRST116') {
+          // No profile found, create one
+          console.log('No profile found, creating new profile');
+          const { data: newProfile, error: createError } = await supabase
+            .from('user_profiles')
+            .insert({
+              id: user.id,
+              display_name: user.email?.split('@')[0] || '',
+              timezone: 'Europe/Zurich',
+              garmin_connected: false
+            })
+            .select()
+            .single();
+
+          if (createError) {
+            console.error('Failed to create profile:', createError);
+            throw createError;
+          }
+          
+          setProfile(newProfile);
+          console.log('New profile created:', newProfile);
+        } else {
+          throw error;
+        }
+      } else {
+        setProfile(data);
+        console.log('Profile loaded successfully:', data);
+      }
+
+      // Try to load existing Garmin credentials if profile exists
+      if (data?.garmin_credentials_encrypted) {
         try {
           const credentials = JSON.parse(data.garmin_credentials_encrypted);
           setGarminCredentials({
@@ -68,7 +101,7 @@ export function UserProfile() {
       console.error('Failed to load profile:', error);
       toast({
         title: "Fehler",
-        description: "Profil konnte nicht geladen werden",
+        description: `Profil konnte nicht geladen werden: ${error instanceof Error ? error.message : 'Unbekannter Fehler'}`,
         variant: "destructive",
       });
     } finally {
