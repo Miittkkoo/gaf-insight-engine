@@ -316,10 +316,10 @@ export const JournalEditDialog: React.FC<JournalEditDialogProps> = ({
                         <SelectValue placeholder="Gefühl wählen" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Erschöpft">😵 Erschöpft</SelectItem>
-                        <SelectItem value="Müde">😴 Müde</SelectItem>
-                        <SelectItem value="Erholt">😌 Erholt</SelectItem>
-                        <SelectItem value="Energiegeladen">⚡ Energiegeladen</SelectItem>
+                        <SelectItem value="erschoepft">😵 Erschöpft</SelectItem>
+                        <SelectItem value="muede">😴 Müde</SelectItem>
+                        <SelectItem value="erholt">😌 Erholt</SelectItem>
+                        <SelectItem value="energiegeladen">⚡ Energiegeladen</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
