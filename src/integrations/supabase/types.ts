@@ -809,10 +809,6 @@ export type Database = {
         Args: { p_user_id: string; p_metric_date: string; p_data: Json }
         Returns: Json
       }
-      save_daily_metrics_v2: {
-        Args: { p_user_id: string; p_metric_date: string; p_data: Json }
-        Returns: Json
-      }
       sparsevec_out: {
         Args: { "": unknown }
         Returns: unknown
