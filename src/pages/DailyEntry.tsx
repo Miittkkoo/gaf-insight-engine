@@ -198,10 +198,13 @@ const DailyEntry = () => {
         updated_at: new Date().toISOString()
       };
 
+      // Remove id and auto-generated fields for UPSERT
+      const { id, created_at, ...cleanDataToSave } = dataToSave as any;
+
       // Use UPSERT with the unique constraint
       const { error } = await supabase
         .from('daily_metrics')
-        .upsert(dataToSave, {
+        .upsert(cleanDataToSave, {
           onConflict: 'user_id,metric_date'
         });
 
