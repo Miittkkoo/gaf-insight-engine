@@ -1,6 +1,7 @@
 // GAF Analysis Engine - Core Intelligence System
 
 import { DailyMetrics, AnalysisResults, Pattern, Recommendation, Alert } from '@/types/gaf';
+import { supabase } from '@/integrations/supabase/client';
 
 export class GAFAnalysisEngine {
   private readonly phases = [
@@ -96,7 +97,32 @@ export class GAFAnalysisEngine {
   }
 
   private async integrateGarminData(userId: string, date: Date) {
-    // Simulate Garmin Connect integration with HRV timing logic
+    try {
+      // Try to get real Garmin data via Edge Function
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session?.access_token) {
+        const response = await fetch('/functions/v1/garmin-sync', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ 
+            date: date.toISOString().split('T')[0] 
+          }),
+        });
+
+        if (response.ok) {
+          const { data: garminData } = await response.json();
+          return this.applyHRVTimingLogic(garminData, date);
+        }
+      }
+    } catch (error) {
+      console.warn('Failed to fetch real Garmin data, using mock data:', error);
+    }
+
+    // Fallback to mock data if real data unavailable
     const mockGarminData = {
       hrv: {
         score: 42 + Math.random() * 25, // 42-67 range
@@ -124,10 +150,13 @@ export class GAFAnalysisEngine {
         avg: 25 + Math.random() * 30,
         max: 60 + Math.random() * 30,
         restingPeriods: 4 + Math.random() * 6
-      }
+      },
+      activities: [],
+      steps: Math.floor(5000 + Math.random() * 10000),
+      calories: Math.floor(1800 + Math.random() * 800),
+      activeMinutes: Math.floor(30 + Math.random() * 90)
     };
 
-    // Apply HRV timing logic
     return this.applyHRVTimingLogic(mockGarminData, date);
   }
 
