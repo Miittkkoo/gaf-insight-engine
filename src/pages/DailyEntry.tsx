@@ -191,43 +191,15 @@ const DailyEntry = () => {
         return;
       }
 
-      const dataToSave = {
-        ...formData,
-        user_id: user.id,
-        hrv_reflects_date: new Date(new Date(formData.metric_date).getTime() - 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        data_completeness: calculateCompleteness(),
-        updated_at: new Date().toISOString()
-      };
-
-      // Remove id and auto-generated fields for UPSERT
-      const { id, created_at, ...cleanDataToSave } = dataToSave as any;
-
-      // First try to update existing record, then insert if it doesn't exist
-      const { data: existingData, error: checkError } = await supabase
-        .from('daily_metrics')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('metric_date', formData.metric_date)
-        .maybeSingle();
-
-      let error;
-      if (existingData && !checkError) {
-        // Update existing record
-        const result = await supabase
-          .from('daily_metrics')
-          .update(cleanDataToSave)
-          .eq('user_id', user.id)
-          .eq('metric_date', formData.metric_date);
-        error = result.error;
-      } else {
-        // Insert new record
-        const result = await supabase
-          .from('daily_metrics')
-          .insert(cleanDataToSave);
-        error = result.error;
-      }
+      // Use the new robust save function
+      const { data, error } = await supabase.rpc('save_daily_metrics', {
+        p_user_id: user.id,
+        p_metric_date: formData.metric_date,
+        p_data: formData as any  // Type assertion for Json compatibility
+      });
 
       if (error) {
+        console.error('Save error:', error);
         toast({
           title: "Fehler beim Speichern",
           description: error.message,

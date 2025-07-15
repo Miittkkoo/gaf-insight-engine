@@ -72,7 +72,7 @@ export type Database = {
           tag_bewertung: number | null
           task_feeling: string | null
           updated_at: string | null
-          user_id: string | null
+          user_id: string
           verdauungsgefuehl: string | null
           werte_gelebt: string[] | null
           werte_kreis_balance: string | null
@@ -135,7 +135,7 @@ export type Database = {
           tag_bewertung?: number | null
           task_feeling?: string | null
           updated_at?: string | null
-          user_id?: string | null
+          user_id: string
           verdauungsgefuehl?: string | null
           werte_gelebt?: string[] | null
           werte_kreis_balance?: string | null
@@ -198,7 +198,7 @@ export type Database = {
           tag_bewertung?: number | null
           task_feeling?: string | null
           updated_at?: string | null
-          user_id?: string | null
+          user_id?: string
           verdauungsgefuehl?: string | null
           werte_gelebt?: string[] | null
           werte_kreis_balance?: string | null
@@ -805,6 +805,10 @@ export type Database = {
         Args: { "": string } | { "": unknown } | { "": unknown }
         Returns: unknown
       }
+      save_daily_metrics: {
+        Args: { p_user_id: string; p_metric_date: string; p_data: Json }
+        Returns: Json
+      }
       sparsevec_out: {
         Args: { "": unknown }
         Returns: unknown
@@ -824,10 +828,6 @@ export type Database = {
       test_profile_update: {
         Args: Record<PropertyKey, never>
         Returns: boolean
-      }
-      upsert_daily_metrics: {
-        Args: { p_data: Json }
-        Returns: undefined
       }
       validate_constraints: {
         Args: Record<PropertyKey, never>
