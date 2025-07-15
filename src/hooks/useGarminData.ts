@@ -27,22 +27,16 @@ export function useGarminData(date: string) {
         throw new Error('Not authenticated');
       }
 
-      // Call the Garmin sync Edge Function
-      const response = await fetch(`https://hjlmhuboqunwplieenwb.supabase.co/functions/v1/garmin-sync`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ date }),
+      // Call the Garmin sync Edge Function using Supabase client
+      const { data: functionResult, error: functionError } = await supabase.functions.invoke('garmin-sync', {
+        body: { date }
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to sync Garmin data');
+      if (functionError) {
+        throw new Error(functionError.message || 'Failed to sync Garmin data');
       }
 
-      const { data: garminData } = await response.json();
+      const garminData = functionResult?.data;
       
       // Refresh from database to get any newly synced data
       await loadExistingData();
