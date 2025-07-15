@@ -203,15 +203,15 @@ const DailyEntry = () => {
       const { id, created_at, ...cleanDataToSave } = dataToSave as any;
 
       // First try to update existing record, then insert if it doesn't exist
-      const { data: existingData } = await supabase
+      const { data: existingData, error: checkError } = await supabase
         .from('daily_metrics')
         .select('id')
         .eq('user_id', user.id)
         .eq('metric_date', formData.metric_date)
-        .single();
+        .maybeSingle();
 
       let error;
-      if (existingData) {
+      if (existingData && !checkError) {
         // Update existing record
         const result = await supabase
           .from('daily_metrics')
