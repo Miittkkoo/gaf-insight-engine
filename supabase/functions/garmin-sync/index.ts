@@ -303,7 +303,8 @@ serve(async (req) => {
       const credentials = JSON.parse(profile.garmin_credentials_encrypted)
       garminEmail = credentials.email
       garminPassword = credentials.password
-      console.log('📱 Using user-specific Garmin credentials')
+      console.log('📱 Using user-specific Garmin credentials for:', garminEmail)
+      console.log('📱 Password length:', garminPassword?.length || 0)
     } catch (e) {
       return new Response(
         JSON.stringify({ error: 'Invalid Garmin credentials format' }),
