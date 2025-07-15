@@ -11,6 +11,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Calendar, Edit3, TrendingUp, Heart, Brain, User, Filter, Search } from 'lucide-react';
 import { useDailyMetrics } from '@/hooks/useDailyMetrics';
 import { JournalEditDialog } from '@/components/JournalEditDialog';
+import GarminDataCard from '@/components/GarminDataCard';
 import { format, parseISO } from 'date-fns';
 import { de } from 'date-fns/locale';
 
@@ -184,7 +185,13 @@ const Journal: React.FC = () => {
         {/* Entries Grid */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {filteredEntries.map((entry) => (
-            <Card key={entry.id} className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-primary/20">
+            <Card 
+              key={entry.id} 
+              className={`cursor-pointer transition-all hover:shadow-lg border-l-4 border-l-primary/20 ${
+                selectedEntry?.id === entry.id ? 'ring-2 ring-primary shadow-md' : ''
+              }`}
+              onClick={() => setSelectedEntry(selectedEntry?.id === entry.id ? null : entry)}
+            >
               <CardHeader className="pb-3">
                 <div className="flex justify-between items-start">
                   <div>

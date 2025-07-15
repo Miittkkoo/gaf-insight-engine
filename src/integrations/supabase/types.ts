@@ -825,6 +825,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
+      trigger_garmin_auto_sync: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       validate_constraints: {
         Args: Record<PropertyKey, never>
         Returns: {
