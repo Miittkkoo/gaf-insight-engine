@@ -201,12 +201,10 @@ const DailyEntry = () => {
       // Remove id and auto-generated fields for UPSERT
       const { id, created_at, ...cleanDataToSave } = dataToSave as any;
 
-      // Use UPSERT with the unique constraint
-      const { error } = await supabase
-        .from('daily_metrics')
-        .upsert(cleanDataToSave, {
-          onConflict: 'user_id,metric_date'
-        });
+      // Use raw SQL for reliable UPSERT operation
+      const { error } = await supabase.rpc('upsert_daily_metrics', {
+        p_data: cleanDataToSave
+      });
 
       if (error) {
         toast({
