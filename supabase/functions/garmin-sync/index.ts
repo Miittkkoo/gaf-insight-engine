@@ -67,126 +67,102 @@ serve(async (req) => {
       )
     }
 
-    // Get user's Garmin user ID from their profile
-    const { data: profile } = await supabaseClient
-      .from('user_profiles')
-      .select('garmin_credentials_encrypted')
-      .eq('id', user.id)
-      .single()
-
-    let garminUserId = '124462920' // Default fallback
-
-    if (profile?.garmin_credentials_encrypted) {
-      try {
-        const credentials = JSON.parse(profile.garmin_credentials_encrypted)
-        garminUserId = credentials.userId || garminUserId
-      } catch (error) {
-        console.error('Failed to parse Garmin credentials:', error)
-      }
-    }
-
-    // Authenticate with Garmin Connect
-    const authResponse = await fetch('https://connect.garmin.com/signin', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: new URLSearchParams({
-        username: garminEmail,
-        password: garminPassword,
-      }),
-    })
-
-    if (!authResponse.ok) {
-      throw new Error('Garmin authentication failed')
-    }
-
-    // Extract cookies for subsequent requests
-    const cookies = authResponse.headers.get('set-cookie') || ''
+    // For now, use mock data until real Garmin integration is ready
+    console.log('🔄 Generating mock Garmin data for development')
     
-    const baseUrl = 'https://connect.garmin.com/modern/proxy'
-    const headers = {
-      'Accept': 'application/json',
-      'X-Requested-With': 'XMLHttpRequest',
-      'Cookie': cookies,
-    }
-
-    // Fetch all Garmin data endpoints in parallel
-    const [hrvResponse, dailyStatsResponse, heartRateResponse, bodyBatteryResponse, sleepResponse] = await Promise.allSettled([
-      fetch(`${baseUrl}/userstats-service/wellness/${garminUserId}?fromDate=${date}&untilDate=${date}`, { headers }),
-      fetch(`${baseUrl}/usersummary-service/usersummary/daily/${garminUserId}?calendarDate=${date}`, { headers }),
-      fetch(`${baseUrl}/wellness-service/wellness/dailyHeartRate/${garminUserId}?date=${date}`, { headers }),
-      fetch(`${baseUrl}/usersummary-service/usersummary/hydration/allData/${garminUserId}?startDate=${date}&endDate=${date}`, { headers }),
-      fetch(`${baseUrl}/wellness-service/wellness/dailySleep/${garminUserId}?date=${date}`, { headers })
-    ])
-
-    const extractData = async (response: PromiseSettledResult<Response>) => {
-      if (response.status === 'fulfilled' && response.value.ok) {
-        try {
-          return await response.value.json()
-        } catch {
-          return null
-        }
-      }
-      return null
-    }
-
-    const [hrv, dailyStats, heartRate, bodyBattery, sleep] = await Promise.all([
-      extractData(hrvResponse),
-      extractData(dailyStatsResponse), 
-      extractData(heartRateResponse),
-      extractData(bodyBatteryResponse),
-      extractData(sleepResponse)
-    ])
-
-    // Store raw data in database
-    const rawDataInserts = []
-    
-    if (hrv) rawDataInserts.push({ user_id: user.id, data_type: 'hrv', data_date: date, raw_json: hrv })
-    if (dailyStats) rawDataInserts.push({ user_id: user.id, data_type: 'daily_stats', data_date: date, raw_json: dailyStats })
-    if (heartRate) rawDataInserts.push({ user_id: user.id, data_type: 'heart_rate', data_date: date, raw_json: heartRate })
-    if (bodyBattery) rawDataInserts.push({ user_id: user.id, data_type: 'body_battery', data_date: date, raw_json: bodyBattery })
-    if (sleep) rawDataInserts.push({ user_id: user.id, data_type: 'sleep', data_date: date, raw_json: sleep })
-
-    if (rawDataInserts.length > 0) {
-      await supabaseClient
-        .from('garmin_raw_data')
-        .insert(rawDataInserts)
-    }
-
-    // Map to standardized format
-    const garminData = {
+    // Mock data that represents realistic Garmin values
+    const mockData = {
       hrv: {
-        score: hrv?.lastNightAvg || 35,
-        sevenDayAvg: hrv?.sevenDayAvg || 35,
-        status: mapHRVStatus(hrv?.status),
-        lastNight: hrv?.lastNight || 35
+        lastNightAvg: Math.floor(Math.random() * 20) + 25, // 25-45ms range
+        sevenDayAvg: Math.floor(Math.random() * 15) + 30, // 30-45ms range
+        status: ['balanced', 'unbalanced', 'low'][Math.floor(Math.random() * 3)],
+        lastNight: Math.floor(Math.random() * 20) + 25
       },
       bodyBattery: {
-        start: bodyBattery?.start || 85,
-        end: bodyBattery?.end || 30,
-        min: bodyBattery?.min || 20,
-        max: bodyBattery?.max || 95,
-        charged: bodyBattery?.charged || 70,
-        drained: bodyBattery?.drained || 65
+        start: Math.floor(Math.random() * 30) + 70, // 70-100 start
+        end: Math.floor(Math.random() * 40) + 20,   // 20-60 end
+        min: Math.floor(Math.random() * 20) + 10,   // 10-30 min
+        max: Math.floor(Math.random() * 20) + 80,   // 80-100 max
+        charged: Math.floor(Math.random() * 40) + 40,
+        drained: Math.floor(Math.random() * 40) + 40
       },
       sleep: {
-        duration: sleep?.duration || 480,
-        deepSleep: sleep?.deepSleep || 90,
-        lightSleep: sleep?.lightSleep || 300,
-        remSleep: sleep?.remSleep || 90,
-        awake: sleep?.awake || 20,
-        quality: mapSleepQuality(sleep?.sleepScores?.overall)
+        duration: Math.floor(Math.random() * 120) + 360, // 6-8 hours in minutes
+        deepSleep: Math.floor(Math.random() * 60) + 60,  // 1-2 hours
+        lightSleep: Math.floor(Math.random() * 120) + 240, // 4-6 hours
+        remSleep: Math.floor(Math.random() * 60) + 60,   // 1-2 hours
+        awake: Math.floor(Math.random() * 30) + 10,      // 10-40 minutes
+        sleepScores: {
+          overall: Math.floor(Math.random() * 40) + 60   // 60-100 score
+        }
+      },
+      dailyStats: {
+        steps: Math.floor(Math.random() * 8000) + 2000,   // 2000-10000 steps
+        calories: Math.floor(Math.random() * 1000) + 1500, // 1500-2500 calories
+        activeMinutes: Math.floor(Math.random() * 60) + 30, // 30-90 minutes
+        stressLevel: Math.floor(Math.random() * 40) + 20,   // 20-60
+        maxStress: Math.floor(Math.random() * 40) + 60,     // 60-100
+        restingStressMinutes: Math.floor(Math.random() * 300) + 200, // 200-500 minutes
+        activities: []
+      }
+    }
+
+    // Use mock data for all endpoints
+    const { hrv, dailyStats, sleep, bodyBattery } = mockData
+    const heartRate = null // Mock data doesn't include heart rate details
+
+    // Store mock data in database
+    const rawDataInserts = [
+      { user_id: user.id, data_type: 'hrv', data_date: date, raw_json: hrv },
+      { user_id: user.id, data_type: 'daily_stats', data_date: date, raw_json: dailyStats },
+      { user_id: user.id, data_type: 'body_battery', data_date: date, raw_json: bodyBattery },
+      { user_id: user.id, data_type: 'sleep', data_date: date, raw_json: sleep }
+    ]
+
+    // Remove existing data for this date to avoid duplicates
+    await supabaseClient
+      .from('garmin_raw_data')
+      .delete()
+      .eq('user_id', user.id)
+      .eq('data_date', date)
+
+    await supabaseClient
+      .from('garmin_raw_data')
+      .insert(rawDataInserts)
+
+    // Map to standardized format with mock data
+    const garminData = {
+      hrv: {
+        score: hrv.lastNightAvg,
+        sevenDayAvg: hrv.sevenDayAvg,
+        status: mapHRVStatus(hrv.status),
+        lastNight: hrv.lastNight
+      },
+      bodyBattery: {
+        start: bodyBattery.start,
+        end: bodyBattery.end,
+        min: bodyBattery.min,
+        max: bodyBattery.max,
+        charged: bodyBattery.charged,
+        drained: bodyBattery.drained
+      },
+      sleep: {
+        duration: sleep.duration,
+        deepSleep: sleep.deepSleep,
+        lightSleep: sleep.lightSleep,
+        remSleep: sleep.remSleep,
+        awake: sleep.awake,
+        quality: mapSleepQuality(sleep.sleepScores.overall)
       },
       stress: {
-        avg: dailyStats?.stressLevel || 25,
-        max: dailyStats?.maxStress || 60,
-        restingPeriods: dailyStats?.restingStressMinutes || 300
+        avg: dailyStats.stressLevel,
+        max: dailyStats.maxStress,
+        restingPeriods: dailyStats.restingStressMinutes
       },
-      activities: dailyStats?.activities || [],
-      steps: dailyStats?.steps || 0,
-      calories: dailyStats?.calories || 0,
-      activeMinutes: dailyStats?.activeMinutes || 0
+      activities: dailyStats.activities,
+      steps: dailyStats.steps,
+      calories: dailyStats.calories,
+      activeMinutes: dailyStats.activeMinutes
     }
 
     // Update user profile

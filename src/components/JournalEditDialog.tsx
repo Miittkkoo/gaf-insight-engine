@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -206,6 +206,9 @@ export const JournalEditDialog: React.FC<JournalEditDialogProps> = ({
             </div>
           )}
         </DialogTitle>
+        <DialogDescription>
+          {editMode ? 'Bearbeiten Sie Ihre täglichen Einträge' : 'Detailansicht Ihrer täglichen Einträge'}
+        </DialogDescription>
       </DialogHeader>
 
       <div className="max-h-[70vh] overflow-y-auto">

@@ -44,6 +44,9 @@ export function useGarminData(date: string) {
 
       const { data: garminData } = await response.json();
       
+      // Refresh from database to get any newly synced data
+      await loadExistingData();
+      
       setState(prev => ({
         ...prev,
         data: garminData,

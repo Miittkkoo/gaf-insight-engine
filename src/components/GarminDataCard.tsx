@@ -128,6 +128,7 @@ const GarminDataCard: React.FC<GarminDataCardProps> = ({ date, showRefresh = fal
   };
 
   const mapHRVStatus = (score: number): 'kritisch' | 'unter_bereich' | 'normal' | 'optimal' => {
+    if (!score) return 'normal';
     if (score <= 22) return 'kritisch';
     if (score <= 26) return 'unter_bereich';
     if (score <= 35) return 'normal';
@@ -135,6 +136,7 @@ const GarminDataCard: React.FC<GarminDataCardProps> = ({ date, showRefresh = fal
   };
 
   const mapSleepQuality = (score: number): 'schlecht' | 'okay' | 'gut' | 'sehr_gut' => {
+    if (!score) return 'okay';
     if (score >= 80) return 'sehr_gut';
     if (score >= 70) return 'gut';
     if (score >= 50) return 'okay';
