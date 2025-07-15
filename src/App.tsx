@@ -5,16 +5,20 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Link, useLocation } from "react-router-dom";
-import { BarChart3, Calendar, Plus, Settings, BookOpen } from "lucide-react";
+import { BarChart3, Calendar, Plus, Settings, BookOpen, LogOut } from "lucide-react";
+import { AuthProvider, useAuth } from "@/components/AuthProvider";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import DailyEntry from "./pages/DailyEntry";
 import Journal from "./pages/Journal";
+import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
 const AppContent = () => {
   const location = useLocation();
+  const { user, signOut } = useAuth();
 
   const navigation = [
     { name: 'Dashboard', href: '/', icon: BarChart3 },
@@ -63,6 +67,16 @@ const AppContent = () => {
               <Badge variant="outline" className="hidden sm:inline-flex">
                 Beta
               </Badge>
+              {user && (
+                <>
+                  <span className="text-sm text-muted-foreground hidden sm:inline">
+                    {user.email}
+                  </span>
+                  <Button variant="ghost" size="icon" onClick={signOut}>
+                    <LogOut className="h-4 w-4" />
+                  </Button>
+                </>
+              )}
               <Button variant="ghost" size="icon">
                 <Settings className="h-4 w-4" />
               </Button>
@@ -74,9 +88,22 @@ const AppContent = () => {
       {/* Main Content */}
       <main className="flex-1">
         <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/daily-entry" element={<DailyEntry />} />
-          <Route path="/journal" element={<Journal />} />
+          <Route path="/auth" element={<Auth />} />
+          <Route path="/" element={
+            <ProtectedRoute>
+              <Index />
+            </ProtectedRoute>
+          } />
+          <Route path="/daily-entry" element={
+            <ProtectedRoute>
+              <DailyEntry />
+            </ProtectedRoute>
+          } />
+          <Route path="/journal" element={
+            <ProtectedRoute>
+              <Journal />
+            </ProtectedRoute>
+          } />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
@@ -90,7 +117,9 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <AppContent />
+        <AuthProvider>
+          <AppContent />
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
