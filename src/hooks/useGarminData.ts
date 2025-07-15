@@ -125,47 +125,104 @@ export function useGarminData(date: string) {
 async function processRawGarminData(rawDataArray: any[]): Promise<GarminData | null> {
   if (!rawDataArray || rawDataArray.length === 0) return null;
 
-  // Aggregate data from different data types
-  const dataByType = rawDataArray.reduce((acc, item) => {
-    acc[item.data_type] = item.raw_json;
-    return acc;
-  }, {});
+  console.log('Processing raw Garmin data:', rawDataArray);
 
-  const { hrv, daily_stats, heart_rate, body_battery, sleep } = dataByType;
-
-  return {
-    hrv: {
-      score: hrv?.lastNightAvg || 35,
-      sevenDayAvg: hrv?.sevenDayAvg || 35,
-      status: mapHRVStatus(hrv?.status),
-      lastNight: hrv?.lastNight || 35
-    },
-    bodyBattery: {
-      start: body_battery?.start || 85,
-      end: body_battery?.end || 30,
-      min: body_battery?.min || 20,
-      max: body_battery?.max || 95,
-      charged: body_battery?.charged || 70,
-      drained: body_battery?.drained || 65
-    },
-    sleep: {
-      duration: sleep?.duration || 480,
-      deepSleep: sleep?.deepSleep || 90,
-      lightSleep: sleep?.lightSleep || 300,
-      remSleep: sleep?.remSleep || 90,
-      awake: sleep?.awake || 20,
-      quality: mapSleepQuality(sleep?.sleepScores?.overall)
-    },
-    stress: {
-      avg: daily_stats?.stressLevel || 25,
-      max: daily_stats?.maxStress || 60,
-      restingPeriods: daily_stats?.restingStressMinutes || 300
-    },
-    activities: daily_stats?.activities || [],
-    steps: daily_stats?.steps || 0,
-    calories: daily_stats?.calories || 0,
-    activeMinutes: daily_stats?.activeMinutes || 0
+  // Initialize result with defaults to prevent NaN and [object Object] errors
+  let result: GarminData = {
+    hrv: { score: 0, sevenDayAvg: 0, status: 'balanced', lastNight: 0 },
+    bodyBattery: { start: 0, end: 0, min: 0, max: 0, charged: 0, drained: 0 },
+    sleep: { duration: 0, deepSleep: 0, lightSleep: 0, remSleep: 0, awake: 0, quality: 'fair' },
+    stress: { avg: 0, max: 0, restingPeriods: 0 },
+    activities: [],
+    steps: 0,
+    calories: 0,
+    activeMinutes: 0,
+    lastSync: null
   };
+
+  // Process each data type
+  rawDataArray.forEach(item => {
+    const { data_type, raw_json } = item;
+    
+    switch (data_type) {
+      case 'hrv':
+        if (raw_json?.hrvSummary) {
+          const hrv = raw_json.hrvSummary;
+          result.hrv = {
+            score: hrv.lastNightAvg || 0,
+            sevenDayAvg: hrv.sevenDayAvg || hrv.lastNightAvg || 0,
+            status: mapHRVStatus(hrv.status),
+            lastNight: hrv.lastNightAvg || 0
+          };
+          // Add direct properties for backward compatibility
+          result.lastNightAvg = hrv.lastNightAvg;
+          result.hrvStatus = hrv.status;
+        }
+        break;
+        
+      case 'sleep':
+        if (raw_json?.dailySleepDTO) {
+          const sleep = raw_json.dailySleepDTO;
+          result.sleep = {
+            duration: Math.round((sleep.sleepTimeSeconds || 0) / 60),
+            deepSleep: Math.round((sleep.deepSleepSeconds || 0) / 60),
+            lightSleep: Math.round((sleep.lightSleepSeconds || 0) / 60),
+            remSleep: Math.round((sleep.remSleepSeconds || 0) / 60),
+            awake: Math.round((sleep.awakeTimeSeconds || 0) / 60),
+            quality: mapSleepQuality(sleep.sleepScore)
+          };
+          // Add direct properties for backward compatibility
+          result.sleepTimeSeconds = sleep.sleepTimeSeconds;
+          result.sleepScore = sleep.sleepScore;
+        }
+        break;
+        
+      case 'body_battery':
+        if (raw_json) {
+          const bodyBatteryLevels = raw_json.bodyBatteryData?.map((d: any) => d.bodyBatteryLevel) || [0];
+          result.bodyBattery = {
+            start: raw_json.startLevel || 0,
+            end: raw_json.endLevel || 0,
+            min: Math.min(...bodyBatteryLevels),
+            max: Math.max(...bodyBatteryLevels),
+            charged: raw_json.charged || 0,
+            drained: raw_json.drained || 0
+          };
+          // Add direct properties for backward compatibility
+          result.endLevel = raw_json.endLevel;
+          result.startLevel = raw_json.startLevel;
+        }
+        break;
+        
+      case 'steps':
+        if (raw_json?.dailyMovement) {
+          const movement = raw_json.dailyMovement;
+          result.steps = movement.totalSteps || 0;
+          result.calories = movement.caloriesBurned || 0;
+          result.activeMinutes = Math.round((movement.activeTimeSeconds || 0) / 60);
+          // Add direct properties for backward compatibility
+          result.totalSteps = movement.totalSteps;
+          result.caloriesBurned = movement.caloriesBurned;
+        }
+        break;
+        
+      case 'stress':
+        if (raw_json) {
+          result.stress = {
+            avg: raw_json.avgStressLevel || 0,
+            max: raw_json.maxStressLevel || 0,
+            restingPeriods: 0 // Not available in current data structure
+          };
+          // Add direct properties for backward compatibility
+          result.avgStressLevel = raw_json.avgStressLevel;
+          result.maxStressLevel = raw_json.maxStressLevel;
+        }
+        break;
+    }
+  });
+
+  console.log('Processed result:', result);
+  return result;
 }
 
 function mapHRVStatus(status: string | undefined): 'balanced' | 'unbalanced' | 'low' {

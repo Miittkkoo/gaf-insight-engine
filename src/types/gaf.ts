@@ -53,6 +53,19 @@ export interface GarminData {
   steps: number;
   calories: number;
   activeMinutes: number;
+  lastSync?: string | null;
+  
+  // Direct access properties for raw data compatibility
+  lastNightAvg?: number;
+  endLevel?: number;
+  sleepTimeSeconds?: number;
+  sleepScore?: number;
+  totalSteps?: number;
+  caloriesBurned?: number;
+  avgStressLevel?: number;
+  maxStressLevel?: number;
+  startLevel?: number;
+  hrvStatus?: string;
 }
 
 export interface Activity {

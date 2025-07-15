@@ -179,25 +179,33 @@ export function GarminSettings() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
               <div>
                 <div className="font-medium">HRV Score</div>
-                <div className="text-2xl font-bold">{Math.round(garminData.hrv.score)}</div>
-                <div className="text-muted-foreground">Status: {garminData.hrv.status}</div>
+                <div className="text-2xl font-bold">
+                  {garminData.hrv?.score || garminData.lastNightAvg || 'N/A'}
+                </div>
+                <div className="text-muted-foreground">Status: {garminData.hrv?.status || 'N/A'}</div>
               </div>
               
               <div>
                 <div className="font-medium">Body Battery</div>
-                <div className="text-2xl font-bold">{Math.round(garminData.bodyBattery?.end || 0)}</div>
+                <div className="text-2xl font-bold">
+                  {garminData.bodyBattery?.end || garminData.endLevel || 0}
+                </div>
                 <div className="text-muted-foreground">Ende des Tages</div>
               </div>
               
               <div>
                 <div className="font-medium">Schlaf</div>
-                <div className="text-2xl font-bold">{Math.round((garminData.sleep?.duration || 0) / 60)}h</div>
-                <div className="text-muted-foreground">Qualität: {garminData.sleep?.quality || 'N/A'}</div>
+                <div className="text-2xl font-bold">
+                  {Math.round((garminData.sleepTimeSeconds || 0) / 3600)}h
+                </div>
+                <div className="text-muted-foreground">Qualität: {garminData.sleepScore ? Math.round(garminData.sleepScore) : 'N/A'}/100</div>
               </div>
               
               <div>
                 <div className="font-medium">Schritte</div>
-                <div className="text-2xl font-bold">{(garminData.steps || 0).toLocaleString()}</div>
+                <div className="text-2xl font-bold">
+                  {(garminData.totalSteps || 0).toLocaleString()}
+                </div>
                 <div className="text-muted-foreground">Heute</div>
               </div>
             </div>
