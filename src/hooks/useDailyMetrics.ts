@@ -54,10 +54,13 @@ export const useDailyMetrics = () => {
       console.log('Saving metrics for user:', user.id, 'date:', data.metric_date);
 
       // UPSERT: Atomische Insert-oder-Update Operation
+      // Entferne id aus den Daten, um Primary Key Konflikte zu vermeiden
+      const { id, ...dataWithoutId } = data;
+      
       const { data: result, error } = await supabase
         .from('daily_metrics')
         .upsert({
-          ...data,
+          ...dataWithoutId,
           user_id: user.id,
           hrv_reflects_date: new Date(new Date(data.metric_date).getTime() - 24 * 60 * 60 * 1000).toISOString().split('T')[0], // Vortag
           updated_at: new Date().toISOString()
