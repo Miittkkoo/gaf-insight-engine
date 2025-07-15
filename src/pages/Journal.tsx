@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Calendar, Edit3, TrendingUp, Heart, Brain, User, Filter, Search } from 'lucide-react';
 import { useDailyMetrics } from '@/hooks/useDailyMetrics';
+import { JournalEditDialog } from '@/components/JournalEditDialog';
 import { format, parseISO } from 'date-fns';
 import { de } from 'date-fns/locale';
 
@@ -183,7 +184,7 @@ const Journal: React.FC = () => {
                       </Button>
                     </DialogTrigger>
                     <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-                      <EntryDetailDialog 
+                      <JournalEditDialog 
                         entry={selectedEntry}
                         editMode={editMode}
                         onEdit={() => setEditMode(true)}
@@ -271,14 +272,7 @@ const Journal: React.FC = () => {
   );
 };
 
-// Entry Detail Dialog Component
-const EntryDetailDialog: React.FC<{
-  entry: DailyMetric | null;
-  editMode: boolean;
-  onEdit: () => void;
-  onCancel: () => void;
-  onSave: (data: Partial<DailyMetric>) => void;
-}> = ({ entry, editMode, onEdit, onCancel, onSave }) => {
+export default Journal;
   const [formData, setFormData] = useState<Partial<DailyMetric>>({});
 
   useEffect(() => {
