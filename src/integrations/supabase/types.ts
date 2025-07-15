@@ -206,6 +206,39 @@ export type Database = {
         }
         Relationships: []
       }
+      feature_flags: {
+        Row: {
+          config: Json | null
+          created_at: string | null
+          description: string | null
+          enabled: boolean | null
+          id: string
+          name: string
+          updated_at: string | null
+          user_percentage: number | null
+        }
+        Insert: {
+          config?: Json | null
+          created_at?: string | null
+          description?: string | null
+          enabled?: boolean | null
+          id?: string
+          name: string
+          updated_at?: string | null
+          user_percentage?: number | null
+        }
+        Update: {
+          config?: Json | null
+          created_at?: string | null
+          description?: string | null
+          enabled?: boolean | null
+          id?: string
+          name?: string
+          updated_at?: string | null
+          user_percentage?: number | null
+        }
+        Relationships: []
+      }
       gaf_analysis_results: {
         Row: {
           alerts: Json[] | null
@@ -533,6 +566,60 @@ export type Database = {
         }
         Relationships: []
       }
+      system_config: {
+        Row: {
+          description: string | null
+          key: string
+          updated_at: string | null
+          value: Json
+        }
+        Insert: {
+          description?: string | null
+          key: string
+          updated_at?: string | null
+          value: Json
+        }
+        Update: {
+          description?: string | null
+          key?: string
+          updated_at?: string | null
+          value?: Json
+        }
+        Relationships: []
+      }
+      user_data_backups: {
+        Row: {
+          backup_date: string | null
+          backup_type: string
+          created_at: string | null
+          id: string
+          metadata: Json | null
+          metrics_data: Json | null
+          profile_data: Json | null
+          user_id: string
+        }
+        Insert: {
+          backup_date?: string | null
+          backup_type?: string
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          metrics_data?: Json | null
+          profile_data?: Json | null
+          user_id: string
+        }
+        Update: {
+          backup_date?: string | null
+          backup_type?: string
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          metrics_data?: Json | null
+          profile_data?: Json | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_profiles: {
         Row: {
           analysis_settings: Json | null
@@ -650,6 +737,14 @@ export type Database = {
         Args: { "": string } | { "": unknown }
         Returns: unknown
       }
+      find_users_without_profiles: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          user_id: string
+          email: string
+          created_at: string
+        }[]
+      }
       halfvec_avg: {
         Args: { "": number[] }
         Returns: unknown
@@ -665,6 +760,14 @@ export type Database = {
       halfvec_typmod_in: {
         Args: { "": unknown[] }
         Returns: number
+      }
+      health_check: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          check_name: string
+          status: string
+          details: Json
+        }[]
       }
       hnsw_bit_support: {
         Args: { "": unknown }
@@ -713,6 +816,23 @@ export type Database = {
       sparsevec_typmod_in: {
         Args: { "": unknown[] }
         Returns: number
+      }
+      test_daily_metrics_insert: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      test_profile_update: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      validate_constraints: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          constraint_name: string
+          table_name: string
+          violations: number
+          constraint_type: string
+        }[]
       }
       validate_pattern_correlation: {
         Args: {
