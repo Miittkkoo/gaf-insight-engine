@@ -185,19 +185,19 @@ export function GarminSettings() {
               
               <div>
                 <div className="font-medium">Body Battery</div>
-                <div className="text-2xl font-bold">{Math.round(garminData.bodyBattery.end)}</div>
+                <div className="text-2xl font-bold">{Math.round(garminData.bodyBattery?.end || 0)}</div>
                 <div className="text-muted-foreground">Ende des Tages</div>
               </div>
               
               <div>
                 <div className="font-medium">Schlaf</div>
-                <div className="text-2xl font-bold">{Math.round(garminData.sleep.duration / 60)}h</div>
-                <div className="text-muted-foreground">Qualität: {garminData.sleep.quality}</div>
+                <div className="text-2xl font-bold">{Math.round((garminData.sleep?.duration || 0) / 60)}h</div>
+                <div className="text-muted-foreground">Qualität: {garminData.sleep?.quality || 'N/A'}</div>
               </div>
               
               <div>
                 <div className="font-medium">Schritte</div>
-                <div className="text-2xl font-bold">{garminData.steps.toLocaleString()}</div>
+                <div className="text-2xl font-bold">{(garminData.steps || 0).toLocaleString()}</div>
                 <div className="text-muted-foreground">Heute</div>
               </div>
             </div>
