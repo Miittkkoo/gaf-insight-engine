@@ -22,18 +22,44 @@ interface DailyMetric {
   mind_status: string | null;
   body_status: string | null;
   soul_status: string | null;
-  tag_bewertung: number | null;
-  werte_zufriedenheit: number | null;
-  stress_level: number | null;
-  schlafqualitaet: string | null;
   fokus_heute: string | null;
+  energie_budget: string | null;
+  schlafqualitaet: string | null;
+  aufwach_gefuehl: string | null;
+  schlafenszeitpunkt: string | null;
+  schlaf_bereitschaft: string | null;
   sport_heute: boolean;
+  sport_intensitaet: string | null;
   meditation_heute: boolean;
+  meditation_timing: string[] | null;
+  oliver_arbeit_heute: boolean | null;
   werte_gelebt: string[] | null;
+  werte_kreis_balance: string | null;
+  werte_zufriedenheit: number | null;
   mood_boosting_events: string[] | null;
   mood_killing_events: string[] | null;
-  notizen: string | null;
+  events_bilanz: string | null;
+  alkohol_konsum: string | null;
+  alkohol_timing: string | null;
+  alkohol_details: string | null;
+  letzte_hauptmahlzeit: string | null;
+  abendliche_nahrung: string | null;
+  verdauungsgefuehl: string | null;
+  gedanken_aktivitaet: string | null;
+  emotionale_belastung: string | null;
+  stress_level: number | null;
+  tag_bewertung: number | null;
+  task_feeling: string | null;
+  koerperliche_symptome: string[] | null;
+  energie_level_ende: string | null;
+  regenerations_bedarf_morgen: string | null;
+  erwartete_hrv_morgen: string | null;
+  anpassungen_morgen: string | null;
   erkenntnisse: string | null;
+  groesster_widerstand: string | null;
+  kontemplative_aktivitaeten: string[] | null;
+  kognitive_verarbeitung: string[] | null;
+  notizen: string | null;
   garmin_last_sync: string | null;
   created_at: string;
   updated_at: string;
@@ -269,256 +295,6 @@ const Journal: React.FC = () => {
         )}
       </div>
     </div>
-  );
-};
-
-export default Journal;
-  const [formData, setFormData] = useState<Partial<DailyMetric>>({});
-
-  useEffect(() => {
-    if (entry) {
-      setFormData(entry);
-    }
-  }, [entry]);
-
-  if (!entry) return null;
-
-  const handleSave = () => {
-    onSave(formData);
-  };
-
-  return (
-    <>
-      <DialogHeader>
-        <DialogTitle className="flex items-center justify-between">
-          <span>
-            📅 {format(parseISO(entry.metric_date), 'dd. MMMM yyyy', { locale: de })}
-          </span>
-          {!editMode && (
-            <Button onClick={onEdit} variant="outline" size="sm">
-              <Edit3 className="h-4 w-4 mr-2" />
-              Bearbeiten
-            </Button>
-          )}
-        </DialogTitle>
-      </DialogHeader>
-
-      <div className="space-y-6 max-h-[70vh] overflow-y-auto">
-        {/* HRV & Framework Section */}
-        <div className="space-y-4">
-          <h3 className="font-semibold text-lg border-b pb-2">📊 HRV & Framework Assessment</h3>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label>HRV Score</Label>
-              {editMode ? (
-                <Input
-                  type="number"
-                  value={formData.hrv_score || ''}
-                  onChange={(e) => setFormData({...formData, hrv_score: e.target.value ? Number(e.target.value) : null})}
-                />
-              ) : (
-                <p className="mt-1 p-2 bg-muted rounded">{entry.hrv_score || 'N/A'}</p>
-              )}
-            </div>
-            <div>
-              <Label>HRV Status</Label>
-              {editMode ? (
-                <Select value={formData.hrv_status || ''} onValueChange={(value) => setFormData({...formData, hrv_status: value})}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="🔴 Kritisch (≤22ms)">🔴 Kritisch (≤22ms)</SelectItem>
-                    <SelectItem value="🟡 Unter Bereich (23-26ms)">🟡 Unter Bereich (23-26ms)</SelectItem>
-                    <SelectItem value="🟢 Normal (27-35ms)">🟢 Normal (27-35ms)</SelectItem>
-                    <SelectItem value="💚 Optimal (≥35ms)">💚 Optimal (≥35ms)</SelectItem>
-                  </SelectContent>
-                </Select>
-              ) : (
-                <p className="mt-1 p-2 bg-muted rounded">{entry.hrv_status || 'N/A'}</p>
-              )}
-            </div>
-          </div>
-
-          <div className="grid grid-cols-3 gap-4">
-            <div>
-              <Label>Mind Status</Label>
-              {editMode ? (
-                <Select value={formData.mind_status || ''} onValueChange={(value) => setFormData({...formData, mind_status: value})}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="🟢 Grün - Klar & Motiviert">🟢 Klar & Motiviert</SelectItem>
-                    <SelectItem value="🟡 Gelb - Funktional aber angestrengt">🟡 Funktional aber angestrengt</SelectItem>
-                    <SelectItem value="🔴 Rot - Überlastet & Erschöpft">🔴 Überlastet & Erschöpft</SelectItem>
-                  </SelectContent>
-                </Select>
-              ) : (
-                <p className="mt-1 p-2 bg-muted rounded">{entry.mind_status || 'N/A'}</p>
-              )}
-            </div>
-            <div>
-              <Label>Body Status</Label>
-              {editMode ? (
-                <Select value={formData.body_status || ''} onValueChange={(value) => setFormData({...formData, body_status: value})}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="🟢 Grün - Energievoll & Vital">🟢 Energievoll & Vital</SelectItem>
-                    <SelectItem value="🟡 Gelb - Müde aber okay">🟡 Müde aber okay</SelectItem>
-                    <SelectItem value="🔴 Rot - Erschöpft & Schmerzen">🔴 Erschöpft & Schmerzen</SelectItem>
-                  </SelectContent>
-                </Select>
-              ) : (
-                <p className="mt-1 p-2 bg-muted rounded">{entry.body_status || 'N/A'}</p>
-              )}
-            </div>
-            <div>
-              <Label>Soul Status</Label>
-              {editMode ? (
-                <Select value={formData.soul_status || ''} onValueChange={(value) => setFormData({...formData, soul_status: value})}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="🟢 Grün - Zufrieden & Sinnhaft">🟢 Zufrieden & Sinnhaft</SelectItem>
-                    <SelectItem value="🟡 Gelb - Neutral & Funktional">🟡 Neutral & Funktional</SelectItem>
-                    <SelectItem value="🔴 Rot - Unzufrieden & Sinnlos">🔴 Unzufrieden & Sinnlos</SelectItem>
-                  </SelectContent>
-                </Select>
-              ) : (
-                <p className="mt-1 p-2 bg-muted rounded">{entry.soul_status || 'N/A'}</p>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Activities & Scores */}
-        <div className="space-y-4">
-          <h3 className="font-semibold text-lg border-b pb-2">🎯 Aktivitäten & Bewertungen</h3>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="flex items-center space-x-2">
-              {editMode ? (
-                <Checkbox
-                  checked={formData.sport_heute || false}
-                  onCheckedChange={(checked) => setFormData({...formData, sport_heute: !!checked})}
-                />
-              ) : (
-                <span>{entry.sport_heute ? '✅' : '❌'}</span>
-              )}
-              <Label>Sport heute</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              {editMode ? (
-                <Checkbox
-                  checked={formData.meditation_heute || false}
-                  onCheckedChange={(checked) => setFormData({...formData, meditation_heute: !!checked})}
-                />
-              ) : (
-                <span>{entry.meditation_heute ? '✅' : '❌'}</span>
-              )}
-              <Label>Meditation heute</Label>
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-3 gap-4">
-            <div>
-              <Label>Tag-Bewertung (1-10)</Label>
-              {editMode ? (
-                <Input
-                  type="number"
-                  min="1"
-                  max="10"
-                  value={formData.tag_bewertung || ''}
-                  onChange={(e) => setFormData({...formData, tag_bewertung: e.target.value ? Number(e.target.value) : null})}
-                />
-              ) : (
-                <p className="mt-1 p-2 bg-muted rounded">{entry.tag_bewertung || 'N/A'}/10</p>
-              )}
-            </div>
-            <div>
-              <Label>Werte-Zufriedenheit (1-10)</Label>
-              {editMode ? (
-                <Input
-                  type="number"
-                  min="1"
-                  max="10"
-                  value={formData.werte_zufriedenheit || ''}
-                  onChange={(e) => setFormData({...formData, werte_zufriedenheit: e.target.value ? Number(e.target.value) : null})}
-                />
-              ) : (
-                <p className="mt-1 p-2 bg-muted rounded">{entry.werte_zufriedenheit || 'N/A'}/10</p>
-              )}
-            </div>
-            <div>
-              <Label>Stress Level (1-10)</Label>
-              {editMode ? (
-                <Input
-                  type="number"
-                  min="1"
-                  max="10"
-                  value={formData.stress_level || ''}
-                  onChange={(e) => setFormData({...formData, stress_level: e.target.value ? Number(e.target.value) : null})}
-                />
-              ) : (
-                <p className="mt-1 p-2 bg-muted rounded">{entry.stress_level || 'N/A'}/10</p>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Reflection */}
-        <div className="space-y-4">
-          <h3 className="font-semibold text-lg border-b pb-2">💭 Reflexion & Notizen</h3>
-          <div>
-            <Label>Notizen</Label>
-            {editMode ? (
-              <Textarea
-                value={formData.notizen || ''}
-                onChange={(e) => setFormData({...formData, notizen: e.target.value})}
-                rows={3}
-              />
-            ) : (
-              <p className="mt-1 p-3 bg-muted rounded min-h-[80px]">{entry.notizen || 'Keine Notizen'}</p>
-            )}
-          </div>
-          <div>
-            <Label>Erkenntnisse des Tages</Label>
-            {editMode ? (
-              <Textarea
-                value={formData.erkenntnisse || ''}
-                onChange={(e) => setFormData({...formData, erkenntnisse: e.target.value})}
-                rows={3}
-              />
-            ) : (
-              <p className="mt-1 p-3 bg-muted rounded min-h-[80px]">{entry.erkenntnisse || 'Keine Erkenntnisse'}</p>
-            )}
-          </div>
-        </div>
-
-        {/* Garmin Sync Info */}
-        {entry.garmin_last_sync && (
-          <div className="bg-blue-50 dark:bg-blue-950/20 p-3 rounded">
-            <p className="text-sm text-blue-700 dark:text-blue-300">
-              ⌚ Letzte Garmin-Synchronisation: {format(parseISO(entry.garmin_last_sync), 'dd.MM.yyyy HH:mm', { locale: de })}
-            </p>
-          </div>
-        )}
-      </div>
-
-      {editMode && (
-        <div className="flex justify-end gap-2 pt-4 border-t">
-          <Button variant="outline" onClick={onCancel}>
-            Abbrechen
-          </Button>
-          <Button onClick={handleSave}>
-            Speichern & Analyse-Update
-          </Button>
-        </div>
-      )}
-    </>
   );
 };
 
