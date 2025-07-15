@@ -825,6 +825,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
+      upsert_daily_metrics: {
+        Args: { p_data: Json }
+        Returns: undefined
+      }
       validate_constraints: {
         Args: Record<PropertyKey, never>
         Returns: {

@@ -202,7 +202,7 @@ const DailyEntry = () => {
       const { id, created_at, ...cleanDataToSave } = dataToSave as any;
 
       // Use raw SQL for reliable UPSERT operation
-      const { error } = await supabase.rpc('upsert_daily_metrics', {
+      const { error } = await supabase.rpc('upsert_daily_metrics' as any, {
         p_data: cleanDataToSave
       });
 
