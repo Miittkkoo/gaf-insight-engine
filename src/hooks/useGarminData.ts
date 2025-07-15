@@ -27,12 +27,21 @@ export function useGarminData(date: string) {
         throw new Error('Not authenticated');
       }
 
+      console.log('Calling Garmin sync function for date:', date);
+      
       // Call the Garmin sync Edge Function using Supabase client
       const { data: functionResult, error: functionError } = await supabase.functions.invoke('garmin-sync', {
-        body: { date }
+        body: { date },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
+        }
       });
 
+      console.log('Function result:', functionResult);
+      console.log('Function error:', functionError);
+
       if (functionError) {
+        console.error('Function error details:', functionError);
         throw new Error(functionError.message || 'Failed to sync Garmin data');
       }
 
@@ -50,6 +59,7 @@ export function useGarminData(date: string) {
 
       return garminData;
     } catch (error) {
+      console.error('Sync error:', error);
       setState(prev => ({
         ...prev,
         loading: false,
