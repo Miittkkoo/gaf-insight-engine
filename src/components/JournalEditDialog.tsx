@@ -239,10 +239,10 @@ export const JournalEditDialog: React.FC<JournalEditDialogProps> = ({
                         <SelectValue placeholder="Status wählen" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Kritisch">🔴 Kritisch (≤22ms)</SelectItem>
-                        <SelectItem value="Unter Bereich">🟡 Unter Bereich (23-26ms)</SelectItem>
-                        <SelectItem value="Normal">🟢 Normal (27-35ms)</SelectItem>
-                        <SelectItem value="Optimal">💚 Optimal (≥35ms)</SelectItem>
+                        <SelectItem value="kritisch">🔴 Kritisch (≤22ms)</SelectItem>
+                        <SelectItem value="unter_bereich">🟡 Unter Bereich (23-26ms)</SelectItem>
+                        <SelectItem value="normal">🟢 Normal (27-35ms)</SelectItem>
+                        <SelectItem value="optimal">💚 Optimal (≥35ms)</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -256,9 +256,9 @@ export const JournalEditDialog: React.FC<JournalEditDialogProps> = ({
                         <SelectValue placeholder="Status wählen" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Klar & Motiviert">🟢 Klar & Motiviert</SelectItem>
-                        <SelectItem value="Funktional aber angestrengt">🟡 Funktional aber angestrengt</SelectItem>
-                        <SelectItem value="Überlastet & Erschöpft">🔴 Überlastet & Erschöpft</SelectItem>
+                        <SelectItem value="klar_motiviert">🟢 Klar & Motiviert</SelectItem>
+                        <SelectItem value="funktional_angestrengt">🟡 Funktional aber angestrengt</SelectItem>
+                        <SelectItem value="ueberlastet_erschoepft">🔴 Überlastet & Erschöpft</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -269,9 +269,9 @@ export const JournalEditDialog: React.FC<JournalEditDialogProps> = ({
                         <SelectValue placeholder="Status wählen" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Energievoll & Vital">🟢 Energievoll & Vital</SelectItem>
-                        <SelectItem value="Müde aber okay">🟡 Müde aber okay</SelectItem>
-                        <SelectItem value="Erschöpft & Schmerzen">🔴 Erschöpft & Schmerzen</SelectItem>
+                        <SelectItem value="energievoll_vital">🟢 Energievoll & Vital</SelectItem>
+                        <SelectItem value="muede_okay">🟡 Müde aber okay</SelectItem>
+                        <SelectItem value="erschoepft_schmerzen">🔴 Erschöpft & Schmerzen</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -282,9 +282,9 @@ export const JournalEditDialog: React.FC<JournalEditDialogProps> = ({
                         <SelectValue placeholder="Status wählen" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Zufrieden & Sinnhaft">🟢 Zufrieden & Sinnhaft</SelectItem>
-                        <SelectItem value="Neutral & Funktional">🟡 Neutral & Funktional</SelectItem>
-                        <SelectItem value="Unzufrieden & Sinnlos">🔴 Unzufrieden & Sinnlos</SelectItem>
+                        <SelectItem value="zufrieden_sinnhaft">🟢 Zufrieden & Sinnhaft</SelectItem>
+                        <SelectItem value="neutral_funktional">🟡 Neutral & Funktional</SelectItem>
+                        <SelectItem value="unzufrieden_sinnlos">🔴 Unzufrieden & Sinnlos</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -302,10 +302,10 @@ export const JournalEditDialog: React.FC<JournalEditDialogProps> = ({
                         <SelectValue placeholder="Qualität wählen" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Schlecht">😴 Schlecht</SelectItem>
-                        <SelectItem value="Okay">😐 Okay</SelectItem>
-                        <SelectItem value="Gut">😊 Gut</SelectItem>
-                        <SelectItem value="Sehr gut">😁 Sehr gut</SelectItem>
+                        <SelectItem value="schlecht">😴 Schlecht</SelectItem>
+                        <SelectItem value="okay">😐 Okay</SelectItem>
+                        <SelectItem value="gut">😊 Gut</SelectItem>
+                        <SelectItem value="sehr_gut">😁 Sehr gut</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -346,10 +346,10 @@ export const JournalEditDialog: React.FC<JournalEditDialogProps> = ({
                         <SelectValue placeholder="Bereitschaft wählen" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Aufgedreht">⚡ Aufgedreht</SelectItem>
-                        <SelectItem value="Normal">😐 Normal</SelectItem>
-                        <SelectItem value="Müde">😴 Müde</SelectItem>
-                        <SelectItem value="Sehr müde">😵 Sehr müde</SelectItem>
+                        <SelectItem value="aufgedreht">⚡ Aufgedreht</SelectItem>
+                        <SelectItem value="normal">😐 Normal</SelectItem>
+                        <SelectItem value="muede">😴 Müde</SelectItem>
+                        <SelectItem value="sehr_muede">😵 Sehr müde</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -367,10 +367,10 @@ export const JournalEditDialog: React.FC<JournalEditDialogProps> = ({
                         <SelectValue placeholder="Fokus wählen" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Regeneration">🛋️ Regeneration</SelectItem>
-                        <SelectItem value="Balance">⚖️ Balance</SelectItem>
-                        <SelectItem value="Produktivität">🚀 Produktivität</SelectItem>
-                        <SelectItem value="Überleben">😵 Überleben</SelectItem>
+                        <SelectItem value="regeneration">🛋️ Regeneration</SelectItem>
+                        <SelectItem value="balance">⚖️ Balance</SelectItem>
+                        <SelectItem value="produktivitaet">🚀 Produktivität</SelectItem>
+                        <SelectItem value="ueberleben">😵 Überleben</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -381,9 +381,9 @@ export const JournalEditDialog: React.FC<JournalEditDialogProps> = ({
                         <SelectValue placeholder="Budget wählen" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Niedrig">🔋 Niedrig</SelectItem>
-                        <SelectItem value="Mittel">🔋🔋 Mittel</SelectItem>
-                        <SelectItem value="Hoch">🔋🔋🔋 Hoch</SelectItem>
+                        <SelectItem value="niedrig">🔋 Niedrig</SelectItem>
+                        <SelectItem value="mittel">🔋🔋 Mittel</SelectItem>
+                        <SelectItem value="hoch">🔋🔋🔋 Hoch</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -422,10 +422,11 @@ export const JournalEditDialog: React.FC<JournalEditDialogProps> = ({
                         <SelectValue placeholder="Intensität wählen" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Leicht">🚶 Leicht</SelectItem>
-                        <SelectItem value="Mittel">🏃 Mittel</SelectItem>
-                        <SelectItem value="Hoch">🏃‍♂️💨 Hoch</SelectItem>
-                        <SelectItem value="Sehr hoch">🏃‍♂️💨💨 Sehr hoch</SelectItem>
+                        <SelectItem value="leicht">🚶 Leicht</SelectItem>
+                        <SelectItem value="mittel">🏃 Mittel</SelectItem>
+                        <SelectItem value="hoch">🏃‍♂️💨 Hoch</SelectItem>
+                        <SelectItem value="sehr_hoch">🏃‍♂️💨💨 Sehr hoch</SelectItem>
+                        <SelectItem value="keine">🚫 Keine</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -484,9 +485,9 @@ export const JournalEditDialog: React.FC<JournalEditDialogProps> = ({
                         <SelectValue placeholder="Balance wählen" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Innerer dominiert">🧘 Innerer dominiert</SelectItem>
-                        <SelectItem value="Ausgewogen">⚖️ Ausgewogen</SelectItem>
-                        <SelectItem value="Äußerer zu viel">📈 Äußerer zu viel</SelectItem>
+                        <SelectItem value="innerer_dominiert">🧘 Innerer dominiert</SelectItem>
+                        <SelectItem value="ausgewogen">⚖️ Ausgewogen</SelectItem>
+                        <SelectItem value="aeusserer_zuviel">📈 Äußerer zu viel</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -539,11 +540,11 @@ export const JournalEditDialog: React.FC<JournalEditDialogProps> = ({
                     <SelectTrigger>
                       <SelectValue placeholder="Bilanz wählen" />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Mehr Booster">📈 Mehr Booster</SelectItem>
-                      <SelectItem value="Ausgeglichen">⚖️ Ausgeglichen</SelectItem>
-                      <SelectItem value="Mehr Killer">📉 Mehr Killer</SelectItem>
-                    </SelectContent>
+                      <SelectContent>
+                        <SelectItem value="mehr_booster">📈 Mehr Booster</SelectItem>
+                        <SelectItem value="ausgeglichen">⚖️ Ausgeglichen</SelectItem>
+                        <SelectItem value="mehr_killer">📉 Mehr Killer</SelectItem>
+                      </SelectContent>
                   </Select>
                 </div>
               </div>
@@ -560,10 +561,10 @@ export const JournalEditDialog: React.FC<JournalEditDialogProps> = ({
                         <SelectValue placeholder="Konsum wählen" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Kein">🚫 Kein</SelectItem>
-                        <SelectItem value="Ein Glas">🍷 Ein Glas</SelectItem>
-                        <SelectItem value="Moderat">🍷🍷 Moderat</SelectItem>
-                        <SelectItem value="Hoch">🍷🍷🍷 Hoch</SelectItem>
+                        <SelectItem value="kein">🚫 Kein</SelectItem>
+                        <SelectItem value="ein_glas">🍷 Ein Glas</SelectItem>
+                        <SelectItem value="moderat">🍷🍷 Moderat</SelectItem>
+                        <SelectItem value="hoch">🍷🍷🍷 Hoch</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -574,17 +575,17 @@ export const JournalEditDialog: React.FC<JournalEditDialogProps> = ({
                         <SelectValue placeholder="Timing wählen" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Kein">🚫 Kein</SelectItem>
-                        <SelectItem value="Mittags">🌞 Mittags</SelectItem>
-                        <SelectItem value="Nachmittags">🌅 Nachmittags</SelectItem>
-                        <SelectItem value="Abends">🌇 Abends</SelectItem>
-                        <SelectItem value="Spät abends">🌙 Spät abends</SelectItem>
+                        <SelectItem value="kein">🚫 Kein</SelectItem>
+                        <SelectItem value="mittags">🌞 Mittags</SelectItem>
+                        <SelectItem value="nachmittags">🌅 Nachmittags</SelectItem>
+                        <SelectItem value="abends">🌇 Abends</SelectItem>
+                        <SelectItem value="spaet_abends">🌙 Spät abends</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                 </div>
 
-                {formData.alkohol_konsum && formData.alkohol_konsum !== 'Kein' && (
+                {formData.alkohol_konsum && formData.alkohol_konsum !== 'kein' && (
                   <div>
                     <Label>Alkohol-Details</Label>
                     <Textarea
@@ -620,10 +621,10 @@ export const JournalEditDialog: React.FC<JournalEditDialogProps> = ({
                         <SelectValue placeholder="Art wählen" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Keine">🚫 Keine</SelectItem>
-                        <SelectItem value="Leichte Snacks">🥨 Leichte Snacks</SelectItem>
-                        <SelectItem value="Normale Mahlzeit">🍽️ Normale Mahlzeit</SelectItem>
-                        <SelectItem value="Schwere Mahlzeit">🍖 Schwere Mahlzeit</SelectItem>
+                        <SelectItem value="keine">🚫 Keine</SelectItem>
+                        <SelectItem value="leichte_snacks">🥨 Leichte Snacks</SelectItem>
+                        <SelectItem value="normale_mahlzeit">🍽️ Normale Mahlzeit</SelectItem>
+                        <SelectItem value="schwere_mahlzeit">🍖 Schwere Mahlzeit</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -635,11 +636,11 @@ export const JournalEditDialog: React.FC<JournalEditDialogProps> = ({
                     <SelectTrigger>
                       <SelectValue placeholder="Gefühl wählen" />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Leicht & gut">✅ Leicht & gut</SelectItem>
-                      <SelectItem value="Normal">😐 Normal</SelectItem>
-                      <SelectItem value="Schwer & voll">😵 Schwer & voll</SelectItem>
-                    </SelectContent>
+                      <SelectContent>
+                        <SelectItem value="leicht_gut">✅ Leicht & gut</SelectItem>
+                        <SelectItem value="normal">😐 Normal</SelectItem>
+                        <SelectItem value="schwer_voll">😵 Schwer & voll</SelectItem>
+                      </SelectContent>
                   </Select>
                 </div>
               </div>
@@ -659,9 +660,9 @@ export const JournalEditDialog: React.FC<JournalEditDialogProps> = ({
                         <SelectValue placeholder="Aktivität wählen" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Ruhig & klar">🧘 Ruhig & klar</SelectItem>
-                        <SelectItem value="Normal">😐 Normal</SelectItem>
-                        <SelectItem value="Kopf voll & Unruhe">🌪️ Kopf voll & Unruhe</SelectItem>
+                        <SelectItem value="ruhig_klar">🧘 Ruhig & klar</SelectItem>
+                        <SelectItem value="normal">😐 Normal</SelectItem>
+                        <SelectItem value="kopf_voll_unruhe">🌪️ Kopf voll & Unruhe</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -672,10 +673,10 @@ export const JournalEditDialog: React.FC<JournalEditDialogProps> = ({
                         <SelectValue placeholder="Belastung wählen" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Keine">😌 Keine</SelectItem>
-                        <SelectItem value="Leicht">😟 Leicht</SelectItem>
-                        <SelectItem value="Mittel">😰 Mittel</SelectItem>
-                        <SelectItem value="Hoch">😫 Hoch</SelectItem>
+                        <SelectItem value="keine">😌 Keine</SelectItem>
+                        <SelectItem value="leicht">😟 Leicht</SelectItem>
+                        <SelectItem value="mittel">😰 Mittel</SelectItem>
+                        <SelectItem value="hoch">😫 Hoch</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -700,9 +701,9 @@ export const JournalEditDialog: React.FC<JournalEditDialogProps> = ({
                         <SelectValue placeholder="Feeling wählen" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Mehr geschafft">✅ Mehr geschafft</SelectItem>
-                        <SelectItem value="Normal produktiv">😐 Normal produktiv</SelectItem>
-                        <SelectItem value="Weniger geschafft">❌ Weniger geschafft</SelectItem>
+                        <SelectItem value="mehr_geschafft">✅ Mehr geschafft</SelectItem>
+                        <SelectItem value="normal_produktiv">😐 Normal produktiv</SelectItem>
+                        <SelectItem value="weniger_geschafft">❌ Weniger geschafft</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -738,10 +739,10 @@ export const JournalEditDialog: React.FC<JournalEditDialogProps> = ({
                         <SelectValue placeholder="Level wählen" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Erschöpft">😵 Erschöpft</SelectItem>
-                        <SelectItem value="Müde">😴 Müde</SelectItem>
-                        <SelectItem value="Okay">😐 Okay</SelectItem>
-                        <SelectItem value="Energievoll">⚡ Energievoll</SelectItem>
+                        <SelectItem value="erschoepft">😵 Erschöpft</SelectItem>
+                        <SelectItem value="muede">😴 Müde</SelectItem>
+                        <SelectItem value="okay">😐 Okay</SelectItem>
+                        <SelectItem value="energievoll">⚡ Energievoll</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -823,9 +824,9 @@ export const JournalEditDialog: React.FC<JournalEditDialogProps> = ({
                         <SelectValue placeholder="Bedarf wählen" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Hoch">🛋️ Hoch</SelectItem>
-                        <SelectItem value="Mittel">😐 Mittel</SelectItem>
-                        <SelectItem value="Niedrig">⚡ Niedrig</SelectItem>
+                        <SelectItem value="hoch">🛋️ Hoch</SelectItem>
+                        <SelectItem value="mittel">😐 Mittel</SelectItem>
+                        <SelectItem value="niedrig">⚡ Niedrig</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -836,9 +837,9 @@ export const JournalEditDialog: React.FC<JournalEditDialogProps> = ({
                         <SelectValue placeholder="Erwartung wählen" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Niedrig">🔴 Niedrig</SelectItem>
-                        <SelectItem value="Normal">🟡 Normal</SelectItem>
-                        <SelectItem value="Hoch">🟢 Hoch</SelectItem>
+                        <SelectItem value="niedrig">🔴 Niedrig</SelectItem>
+                        <SelectItem value="normal">🟡 Normal</SelectItem>
+                        <SelectItem value="hoch">🟢 Hoch</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
