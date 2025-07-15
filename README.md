@@ -1,8 +1,24 @@
-# Welcome to your Lovable project
+# GAF Analysis Dashboard
+
+A comprehensive health analytics dashboard integrating Garmin data for personal optimization.
 
 ## Project info
 
 **URL**: https://lovable.dev/projects/0d606591-4286-49d7-9db9-0354e9ea0bd2
+
+## TODO / Future Improvements
+
+### High Priority
+- [ ] **Migrate to Official Garmin Health API**: Currently using web-scraping approach with email/password. Should migrate to official OAuth 1.0a based Garmin Health API for better stability, security, and compliance.
+  - Requires application submission to Garmin
+  - Implement proper OAuth flow
+  - More stable and secure data access
+
+### Technical Debt
+- [ ] Implement proper error handling for Garmin API failures
+- [ ] Add data validation for incoming Garmin metrics
+- [ ] Optimize database queries for analytics
+- [ ] Add automated testing for critical analysis functions
 
 ## How can I edit this code?
 
