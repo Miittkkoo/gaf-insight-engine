@@ -805,7 +805,7 @@ export type Database = {
         Args: { "": string } | { "": unknown } | { "": unknown }
         Returns: unknown
       }
-      save_daily_metrics: {
+      save_daily_metrics_final: {
         Args: { p_user_id: string; p_metric_date: string; p_data: Json }
         Returns: Json
       }

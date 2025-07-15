@@ -50,7 +50,7 @@ export const useDailyMetrics = () => {
         throw new Error('Nicht angemeldet');
       }
 
-      const { data: result, error } = await supabase.rpc('save_daily_metrics_v2', {
+      const { data: result, error } = await supabase.rpc('save_daily_metrics_final', {
         p_user_id: user.id,
         p_metric_date: data.metric_date,
         p_data: data as any
@@ -98,8 +98,8 @@ export const useDailyMetrics = () => {
         throw fetchError;
       }
 
-      // Use save_daily_metrics_v2 function for updates too
-      const { data: result, error } = await supabase.rpc('save_daily_metrics_v2', {
+      // Use save_daily_metrics_final function for updates too
+      const { data: result, error } = await supabase.rpc('save_daily_metrics_final', {
         p_user_id: user.id,
         p_metric_date: currentEntry.metric_date,
         p_data: updates as any
