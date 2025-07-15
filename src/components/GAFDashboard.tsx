@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Link } from 'react-router-dom';
 import { 
   Activity, 
   Heart, 
@@ -12,7 +13,8 @@ import {
   TrendingDown,
   AlertTriangle,
   CheckCircle,
-  ZapOff
+  ZapOff,
+  Plus
 } from 'lucide-react';
 import { GAFAnalysisEngine } from '@/services/gafAnalysisEngine';
 import { AnalysisResults } from '@/types/gaf';
@@ -96,14 +98,22 @@ export const GAFDashboard: React.FC<GAFDashboardProps> = () => {
               Personal Health & Performance Intelligence Platform
             </p>
           </div>
-          <Button 
-            onClick={runAnalysis} 
-            disabled={loading}
-            className="bg-gradient-primary hover:opacity-90 transition-opacity"
-            size="lg"
-          >
-            {loading ? '🔬 Analyzing...' : '🚀 Run Analysis'}
-          </Button>
+          <div className="flex gap-3">
+            <Link to="/daily-entry">
+              <Button className="bg-gradient-secondary hover:opacity-90 transition-opacity" size="lg">
+                <Plus className="w-4 h-4 mr-2" />
+                Daily Entry
+              </Button>
+            </Link>
+            <Button 
+              onClick={runAnalysis} 
+              disabled={loading}
+              className="bg-gradient-primary hover:opacity-90 transition-opacity"
+              size="lg"
+            >
+              {loading ? '🔬 Analyzing...' : '🚀 Run Analysis'}
+            </Button>
+          </div>
         </div>
       </div>
 
