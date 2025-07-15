@@ -1,19 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Calendar, Edit3, TrendingUp, Heart, Brain, User, Filter, Search } from 'lucide-react';
-import { useDailyMetrics } from '@/hooks/useDailyMetrics';
-import { JournalEditDialog } from '@/components/JournalEditDialog';
-import GarminDataCard from '@/components/GarminDataCard';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Calendar, Search, Filter, Heart, Brain, Users, Edit3 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { de } from 'date-fns/locale';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+import GarminDataCard from '@/components/GarminDataCard';
+import { JournalEditDialog } from '@/components/JournalEditDialog';
 
 interface DailyMetric {
   id: string;
@@ -73,40 +71,77 @@ const Journal: React.FC = () => {
   const [editMode, setEditMode] = useState(false);
   const [searchFilter, setSearchFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const { updateMetrics, loadAllMetrics } = useDailyMetrics();
+  const { toast } = useToast();
 
   useEffect(() => {
-    fetchEntries();
+    loadEntries();
   }, []);
 
-  const fetchEntries = async () => {
+  const loadEntries = async () => {
     try {
-      const data = await loadAllMetrics();
-      setEntries(data);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from('daily_metrics')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('metric_date', { ascending: false });
+
+      if (error) throw error;
+      setEntries(data || []);
     } catch (error) {
-      console.error('Error fetching entries:', error);
+      console.error('Error loading entries:', error);
+      toast({
+        title: "Fehler beim Laden",
+        description: "Einträge konnten nicht geladen werden.",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
   };
 
-  const updateEntry = async (updatedEntry: Partial<DailyMetric>) => {
+  const handleEdit = () => {
+    setEditMode(true);
+  };
+
+  const handleCancelEdit = () => {
+    setEditMode(false);
+  };
+
+  const handleSaveEntry = async (updatedData: Partial<DailyMetric>) => {
     if (!selectedEntry) return;
 
     try {
-      await updateMetrics(selectedEntry.id, updatedEntry);
-      await fetchEntries();
+      const { error } = await supabase
+        .from('daily_metrics')
+        .update(updatedData)
+        .eq('id', selectedEntry.id);
+
+      if (error) throw error;
+
       setEditMode(false);
+      loadEntries();
+      
+      toast({
+        title: "Eintrag gespeichert",
+        description: "Ihre Änderungen wurden erfolgreich gespeichert.",
+      });
     } catch (error) {
-      console.error('Error updating entry:', error);
+      toast({
+        title: "Fehler beim Speichern",
+        description: error instanceof Error ? error.message : "Unbekannter Fehler",
+        variant: "destructive",
+      });
     }
   };
 
   const getStatusColor = (status: string | null) => {
     if (!status) return 'secondary';
-    if (status.includes('Grün') || status.includes('Normal') || status.includes('Optimal')) return 'default';
-    if (status.includes('Gelb') || status.includes('Unter')) return 'secondary';
-    if (status.includes('Rot') || status.includes('Kritisch')) return 'destructive';
+    if (status.includes('klar_motiviert') || status.includes('energievoll_vital') || status.includes('zufrieden_sinnhaft')) return 'default';
+    if (status.includes('funktional_angestrengt') || status.includes('muede_okay') || status.includes('neutral_funktional')) return 'secondary';
+    if (status.includes('ueberlastet_erschoepft') || status.includes('erschoepft_schmerzen') || status.includes('unzufrieden_sinnlos')) return 'destructive';
     return 'outline';
   };
 
@@ -190,7 +225,14 @@ const Journal: React.FC = () => {
               className={`cursor-pointer transition-all hover:shadow-lg border-l-4 border-l-primary/20 ${
                 selectedEntry?.id === entry.id ? 'ring-2 ring-primary shadow-md' : ''
               }`}
-              onClick={() => setSelectedEntry(selectedEntry?.id === entry.id ? null : entry)}
+              onClick={() => {
+                if (selectedEntry?.id === entry.id) {
+                  setSelectedEntry(null);
+                } else {
+                  setSelectedEntry(entry);
+                  setEditMode(false);
+                }
+              }}
             >
               <CardHeader className="pb-3">
                 <div className="flex justify-between items-start">
@@ -203,29 +245,18 @@ const Journal: React.FC = () => {
                       {format(parseISO(entry.updated_at), 'HH:mm', { locale: de })} Uhr
                     </p>
                   </div>
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setSelectedEntry(entry);
-                          setEditMode(false);
-                        }}
-                      >
-                        <Edit3 className="h-4 w-4" />
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-                      <JournalEditDialog 
-                        entry={selectedEntry}
-                        editMode={editMode}
-                        onEdit={() => setEditMode(true)}
-                        onCancel={() => setEditMode(false)}
-                        onSave={updateEntry}
-                      />
-                    </DialogContent>
-                  </Dialog>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedEntry(entry);
+                      setEditMode(true);
+                    }}
+                  >
+                    <Edit3 className="h-3 w-3 mr-1" />
+                    Bearbeiten
+                  </Button>
                 </div>
               </CardHeader>
               
@@ -233,7 +264,7 @@ const Journal: React.FC = () => {
                 {/* Quick Status Overview */}
                 <div className="grid grid-cols-2 gap-3">
                   <div className="flex items-center gap-2">
-                    <TrendingUp className="h-4 w-4 text-blue-500" />
+                    <Heart className="h-4 w-4 text-red-500" />
                     <div>
                       <p className="text-xs text-muted-foreground">HRV</p>
                       <p className="font-semibold">{entry.hrv_score || 'N/A'}</p>
@@ -259,7 +290,7 @@ const Journal: React.FC = () => {
                   )}
                   {entry.body_status && (
                     <Badge variant={getStatusColor(entry.body_status)} className="text-xs">
-                      <User className="h-3 w-3 mr-1" />
+                      <Users className="h-3 w-3 mr-1" />
                       Body
                     </Badge>
                   )}
@@ -284,6 +315,13 @@ const Journal: React.FC = () => {
                     💭 {entry.notizen}
                   </p>
                 )}
+
+                {/* Garmin Data Card for selected entry */}
+                {selectedEntry?.id === entry.id && (
+                  <div className="mt-4 border-t pt-4">
+                    <GarminDataCard date={entry.metric_date} />
+                  </div>
+                )}
               </CardContent>
             </Card>
           ))}
@@ -300,6 +338,21 @@ const Journal: React.FC = () => {
             </CardContent>
           </Card>
         )}
+
+        {/* Edit Dialog */}
+        <Dialog open={editMode} onOpenChange={() => setEditMode(false)}>
+          <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden">
+            {selectedEntry && (
+              <JournalEditDialog
+                entry={selectedEntry}
+                editMode={true}
+                onEdit={handleEdit}
+                onCancel={handleCancelEdit}
+                onSave={handleSaveEntry}
+              />
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
