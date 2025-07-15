@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Slider } from '@/components/ui/slider';
 import { Calendar, Clock, Heart, Brain, Sparkles, Target, Moon, Sun, Coffee } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -556,27 +557,37 @@ const DailyEntry = () => {
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="werte-zufriedenheit">Werte-Zufriedenheit (1-10)</Label>
-                  <Input
+                <div className="space-y-2">
+                  <Label htmlFor="werte-zufriedenheit">Werte-Zufriedenheit: {formData.werte_zufriedenheit || 5}</Label>
+                  <Slider
                     id="werte-zufriedenheit"
-                    type="number"
-                    min="1"
-                    max="10"
-                    value={formData.werte_zufriedenheit || ''}
-                    onChange={(e) => setFormData(prev => ({ ...prev, werte_zufriedenheit: parseInt(e.target.value) || undefined }))}
+                    min={1}
+                    max={10}
+                    step={1}
+                    value={[formData.werte_zufriedenheit || 5]}
+                    onValueChange={(value) => setFormData(prev => ({ ...prev, werte_zufriedenheit: value[0] }))}
+                    className="w-full"
                   />
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>1 (niedrig)</span>
+                    <span>10 (hoch)</span>
+                  </div>
                 </div>
-                <div>
-                  <Label htmlFor="stress-level">Stress Level (1-10)</Label>
-                  <Input
+                <div className="space-y-2">
+                  <Label htmlFor="stress-level">Stress Level: {formData.stress_level || 5}</Label>
+                  <Slider
                     id="stress-level"
-                    type="number"
-                    min="1"
-                    max="10"
-                    value={formData.stress_level || ''}
-                    onChange={(e) => setFormData(prev => ({ ...prev, stress_level: parseInt(e.target.value) || undefined }))}
+                    min={1}
+                    max={10}
+                    step={1}
+                    value={[formData.stress_level || 5]}
+                    onValueChange={(value) => setFormData(prev => ({ ...prev, stress_level: value[0] }))}
+                    className="w-full"
                   />
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>1 (niedrig)</span>
+                    <span>10 (hoch)</span>
+                  </div>
                 </div>
               </div>
 
@@ -698,16 +709,21 @@ const DailyEntry = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="tag-bewertung">Tag-Bewertung gesamt (1-10)</Label>
-                  <Input
+                <div className="space-y-2">
+                  <Label htmlFor="tag-bewertung">Tag-Bewertung gesamt: {formData.tag_bewertung || 5}</Label>
+                  <Slider
                     id="tag-bewertung"
-                    type="number"
-                    min="1"
-                    max="10"
-                    value={formData.tag_bewertung || ''}
-                    onChange={(e) => setFormData(prev => ({ ...prev, tag_bewertung: parseInt(e.target.value) || undefined }))}
+                    min={1}
+                    max={10}
+                    step={1}
+                    value={[formData.tag_bewertung || 5]}
+                    onValueChange={(value) => setFormData(prev => ({ ...prev, tag_bewertung: value[0] }))}
+                    className="w-full"
                   />
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>1 (schlecht)</span>
+                    <span>10 (ausgezeichnet)</span>
+                  </div>
                 </div>
                 <div>
                   <Label htmlFor="regenerations-bedarf">Regenerations-Bedarf morgen</Label>
