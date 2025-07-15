@@ -281,6 +281,120 @@ export type Database = {
         }
         Relationships: []
       }
+      garmin_devices: {
+        Row: {
+          created_at: string
+          device_id: string
+          device_name: string
+          device_type: string | null
+          firmware_version: string | null
+          id: string
+          is_active: boolean | null
+          last_sync: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          device_id: string
+          device_name: string
+          device_type?: string | null
+          firmware_version?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_sync?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          device_id?: string
+          device_name?: string
+          device_type?: string | null
+          firmware_version?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_sync?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      garmin_raw_data: {
+        Row: {
+          created_at: string
+          data_date: string
+          data_type: string
+          garmin_id: string | null
+          id: string
+          processed: boolean | null
+          processing_errors: string[] | null
+          raw_json: Json
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          data_date: string
+          data_type: string
+          garmin_id?: string | null
+          id?: string
+          processed?: boolean | null
+          processing_errors?: string[] | null
+          raw_json: Json
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          data_date?: string
+          data_type?: string
+          garmin_id?: string | null
+          id?: string
+          processed?: boolean | null
+          processing_errors?: string[] | null
+          raw_json?: Json
+          user_id?: string
+        }
+        Relationships: []
+      }
+      garmin_sync_logs: {
+        Row: {
+          created_at: string
+          data_points_synced: number | null
+          error_message: string | null
+          garmin_last_activity_timestamp: string | null
+          id: string
+          status: string
+          sync_duration_ms: number | null
+          sync_timestamp: string
+          sync_type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          data_points_synced?: number | null
+          error_message?: string | null
+          garmin_last_activity_timestamp?: string | null
+          id?: string
+          status?: string
+          sync_duration_ms?: number | null
+          sync_timestamp?: string
+          sync_type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          data_points_synced?: number | null
+          error_message?: string | null
+          garmin_last_activity_timestamp?: string | null
+          id?: string
+          status?: string
+          sync_duration_ms?: number | null
+          sync_timestamp?: string
+          sync_type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       knowledge_base: {
         Row: {
           category: string

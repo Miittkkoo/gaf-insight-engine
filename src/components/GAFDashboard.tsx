@@ -14,7 +14,8 @@ import {
   AlertTriangle,
   CheckCircle,
   ZapOff,
-  Plus
+  Plus,
+  BookOpen
 } from 'lucide-react';
 import { GAFAnalysisEngine } from '@/services/gafAnalysisEngine';
 import { AnalysisResults } from '@/types/gaf';
@@ -99,6 +100,12 @@ export const GAFDashboard: React.FC<GAFDashboardProps> = () => {
             </p>
           </div>
           <div className="flex gap-3">
+            <Link to="/journal">
+              <Button variant="outline" className="hover:bg-muted" size="lg">
+                <BookOpen className="w-4 h-4 mr-2" />
+                Journal
+              </Button>
+            </Link>
             <Link to="/daily-entry">
               <Button className="bg-gradient-secondary hover:opacity-90 transition-opacity" size="lg">
                 <Plus className="w-4 h-4 mr-2" />

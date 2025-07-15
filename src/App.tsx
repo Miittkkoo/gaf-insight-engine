@@ -5,9 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Link, useLocation } from "react-router-dom";
-import { BarChart3, Calendar, Plus, Settings } from "lucide-react";
+import { BarChart3, Calendar, Plus, Settings, BookOpen } from "lucide-react";
 import Index from "./pages/Index";
 import DailyEntry from "./pages/DailyEntry";
+import Journal from "./pages/Journal";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -18,6 +19,7 @@ const AppContent = () => {
   const navigation = [
     { name: 'Dashboard', href: '/', icon: BarChart3 },
     { name: 'Daily Entry', href: '/daily-entry', icon: Plus },
+    { name: 'Journal', href: '/journal', icon: BookOpen },
   ];
 
   return (
@@ -74,6 +76,7 @@ const AppContent = () => {
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/daily-entry" element={<DailyEntry />} />
+          <Route path="/journal" element={<Journal />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
