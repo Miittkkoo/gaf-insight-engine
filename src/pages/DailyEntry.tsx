@@ -10,8 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Slider } from '@/components/ui/slider';
 import { Calendar, Clock, Heart, Brain, Sparkles, Target, Moon, Sun, Coffee } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { useDailyMetrics } from '@/hooks/useDailyMetrics';
 
 interface DailyMetrics {
   metric_date: string;
@@ -150,8 +149,7 @@ const DailyEntry = () => {
   });
   
   const [activeTab, setActiveTab] = useState('morning');
-  const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
+  const { saveMetrics, loadMetrics, isLoading } = useDailyMetrics();
 
   useEffect(() => {
     loadExistingData();
@@ -159,17 +157,7 @@ const DailyEntry = () => {
 
   const loadExistingData = async () => {
     try {
-      const { data, error } = await supabase
-        .from('daily_metrics')
-        .select('*')
-        .eq('metric_date', formData.metric_date)
-        .maybeSingle();
-
-      if (error && error.code !== 'PGRST116') {
-        console.error('Error loading data:', error);
-        return;
-      }
-
+      const data = await loadMetrics(formData.metric_date);
       if (data) {
         setFormData(prev => ({ ...prev, ...data }));
       }
@@ -179,48 +167,7 @@ const DailyEntry = () => {
   };
 
   const handleSubmit = async () => {
-    setIsLoading(true);
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        toast({
-          title: "Fehler",
-          description: "Bitte melden Sie sich an",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      // Use the new robust save function
-      const { data, error } = await supabase.rpc('save_daily_metrics', {
-        p_user_id: user.id,
-        p_metric_date: formData.metric_date,
-        p_data: formData as any  // Type assertion for Json compatibility
-      });
-
-      if (error) {
-        console.error('Save error:', error);
-        toast({
-          title: "Fehler beim Speichern",
-          description: error.message,
-          variant: "destructive"
-        });
-      } else {
-        toast({
-          title: "Gespeichert!",
-          description: "Ihre Daten wurden erfolgreich gespeichert"
-        });
-      }
-    } catch (error) {
-      console.error('Error saving:', error);
-      toast({
-        title: "Fehler",
-        description: "Unerwarteter Fehler beim Speichern",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
-    }
+    await saveMetrics(formData);
   };
 
   const calculateCompleteness = () => {

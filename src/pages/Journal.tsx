@@ -8,9 +8,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
-import { supabase } from '@/integrations/supabase/client';
 import { Calendar, Edit3, TrendingUp, Heart, Brain, User, Filter, Search } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { useDailyMetrics } from '@/hooks/useDailyMetrics';
 import { format, parseISO } from 'date-fns';
 import { de } from 'date-fns/locale';
 
@@ -46,7 +45,7 @@ const Journal: React.FC = () => {
   const [editMode, setEditMode] = useState(false);
   const [searchFilter, setSearchFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const { toast } = useToast();
+  const { updateMetrics, loadAllMetrics } = useDailyMetrics();
 
   useEffect(() => {
     fetchEntries();
@@ -54,20 +53,10 @@ const Journal: React.FC = () => {
 
   const fetchEntries = async () => {
     try {
-      const { data, error } = await supabase
-        .from('daily_metrics')
-        .select('*')
-        .order('metric_date', { ascending: false });
-
-      if (error) throw error;
-      setEntries(data || []);
+      const data = await loadAllMetrics();
+      setEntries(data);
     } catch (error) {
       console.error('Error fetching entries:', error);
-      toast({
-        title: "Fehler",
-        description: "Einträge konnten nicht geladen werden",
-        variant: "destructive",
-      });
     } finally {
       setLoading(false);
     }
@@ -77,29 +66,11 @@ const Journal: React.FC = () => {
     if (!selectedEntry) return;
 
     try {
-      const { error } = await supabase
-        .from('daily_metrics')
-        .update({
-          ...updatedEntry,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', selectedEntry.id);
-
-      if (error) throw error;
-
+      await updateMetrics(selectedEntry.id, updatedEntry);
       await fetchEntries();
       setEditMode(false);
-      toast({
-        title: "Erfolg",
-        description: "Eintrag wurde aktualisiert und Analyse-Update ausgelöst",
-      });
     } catch (error) {
       console.error('Error updating entry:', error);
-      toast({
-        title: "Fehler",
-        description: "Eintrag konnte nicht aktualisiert werden",
-        variant: "destructive",
-      });
     }
   };
 
