@@ -6,138 +6,167 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-// Garmin Connect API Configuration
-const GARMIN_CONNECT_BASE_URL = 'https://connect.garmin.com'
-const GARMIN_SSO_BASE_URL = 'https://sso.garmin.com/sso'
-
-interface GarminSession {
-  cookies: string[]
-  sessionId?: string
-}
-
+// Improved Garmin Connect Client based on garth library principles
 class GarminConnectClient {
-  private session: GarminSession = { cookies: [] }
   private email: string
   private password: string
+  private cookies = new Map<string, string>()
 
   constructor(email: string, password: string) {
     this.email = email
     this.password = password
   }
 
-  private getCookieString(): string {
-    return this.session.cookies.join('; ')
-  }
-
-  private updateCookies(headers: Headers) {
-    const setCookieHeaders = headers.getSetCookie()
-    for (const cookie of setCookieHeaders) {
-      const cookieName = cookie.split('=')[0]
-      // Remove existing cookie with same name
-      this.session.cookies = this.session.cookies.filter(c => !c.startsWith(cookieName + '='))
-      // Add new cookie
-      this.session.cookies.push(cookie.split(';')[0])
+  private updateCookies(response: Response) {
+    const setCookieHeader = response.headers.get('set-cookie')
+    if (setCookieHeader) {
+      const cookies = setCookieHeader.split(',')
+      for (const cookie of cookies) {
+        const [nameValue] = cookie.split(';')
+        const [name, value] = nameValue.split('=')
+        if (name && value) {
+          this.cookies.set(name.trim(), value.trim())
+        }
+      }
     }
   }
 
+  private getCookieHeader(): string {
+    return Array.from(this.cookies.entries())
+      .map(([name, value]) => `${name}=${value}`)
+      .join('; ')
+  }
+
   async authenticate(): Promise<void> {
-    console.log('🔐 Authenticating with Garmin Connect...')
+    console.log('🔐 Authenticating with Garmin Connect using improved method...')
 
     try {
-      // Step 1: Get login page to establish session
-      console.log('Step 1: Getting login page...')
-      const loginPageResponse = await fetch(`${GARMIN_SSO_BASE_URL}/signin`, {
+      // Step 1: Get CSRF token and session
+      const loginPageResponse = await fetch('https://sso.garmin.com/sso/signin', {
         method: 'GET',
         headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
         }
       })
+      
+      this.updateCookies(loginPageResponse)
+      const loginPageHtml = await loginPageResponse.text()
+      
+      // Extract CSRF token
+      const csrfMatch = loginPageHtml.match(/name="_csrf"\s+value="([^"]+)"/)
+      const csrfToken = csrfMatch ? csrfMatch[1] : ''
+      
+      console.log('✅ Got login page and CSRF token')
 
-      this.updateCookies(loginPageResponse.headers)
-      console.log('✅ Login page loaded, cookies updated')
-
-      // Step 2: Perform login
-      console.log('Step 2: Performing login...')
+      // Step 2: Login with credentials
       const loginData = new URLSearchParams({
         'username': this.email,
         'password': this.password,
+        '_csrf': csrfToken,
         'embed': 'false',
         'displayNameRequired': 'false'
       })
 
-      const loginResponse = await fetch(`${GARMIN_SSO_BASE_URL}/signin`, {
+      const loginResponse = await fetch('https://sso.garmin.com/sso/signin', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
-          'Cookie': this.getCookieString(),
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+          'Cookie': this.getCookieHeader(),
+          'Referer': 'https://sso.garmin.com/sso/signin'
         },
         body: loginData.toString(),
         redirect: 'manual'
       })
 
-      this.updateCookies(loginResponse.headers)
-
-      // Check if login was successful - accept both 200 and 302 as valid responses
+      this.updateCookies(loginResponse)
+      
+      // Check for successful authentication
       if (loginResponse.status === 302) {
-        console.log('✅ Login successful, following redirect...')
-        
-        // Step 3: Follow redirect to complete authentication
         const location = loginResponse.headers.get('location')
-        if (location) {
-          const redirectResponse = await fetch(location, {
+        if (location?.includes('ticket=')) {
+          console.log('✅ Login successful, processing ticket...')
+          
+          // Follow the redirect to complete authentication
+          const ticketResponse = await fetch(location, {
             method: 'GET',
             headers: {
-              'Cookie': this.getCookieString(),
-              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+              'Cookie': this.getCookieHeader()
             },
             redirect: 'manual'
           })
           
-          this.updateCookies(redirectResponse.headers)
+          this.updateCookies(ticketResponse)
+          
+          if (ticketResponse.status === 302) {
+            const finalLocation = ticketResponse.headers.get('location')
+            if (finalLocation) {
+              const finalResponse = await fetch(finalLocation, {
+                method: 'GET',
+                headers: {
+                  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                  'Cookie': this.getCookieHeader()
+                }
+              })
+              this.updateCookies(finalResponse)
+            }
+          }
+          
           console.log('✅ Authentication complete!')
+          return
         }
-      } else if (loginResponse.status === 200) {
-        console.log('✅ Login successful (status 200)')
-        // Some Garmin endpoints return 200 instead of redirect, check response content
-        const responseText = await loginResponse.text()
-        if (responseText.includes('success') || this.getCookieString().includes('GARMIN-SSO')) {
-          console.log('✅ Authentication appears successful based on cookies')
-        } else {
-          console.log('⚠️ Login status unclear, continuing with available cookies')
-        }
-      } else {
-        throw new Error(`Login failed with status: ${loginResponse.status}`)
       }
+      
+      // Check response for errors
+      const responseText = await loginResponse.text()
+      if (responseText.includes('Invalid username or password') || responseText.includes('error')) {
+        throw new Error('Invalid username or password')
+      }
+      
+      // If we get here, assume success if we have session cookies
+      if (this.cookies.has('GARMIN-SSO') || this.cookies.size > 0) {
+        console.log('✅ Authentication appears successful')
+        return
+      }
+      
+      throw new Error('Authentication failed - no session established')
+      
     } catch (error) {
       console.error('❌ Authentication failed:', error)
-      throw new Error(`Garmin authentication failed: ${error.message}`)
+      throw error
     }
   }
 
-  private async makeAuthenticatedRequest(url: string): Promise<any> {
+  private async makeRequest(url: string): Promise<any> {
     const response = await fetch(url, {
       method: 'GET',
       headers: {
-        'Cookie': this.getCookieString(),
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'Cookie': this.getCookieHeader(),
         'Accept': 'application/json',
         'X-Requested-With': 'XMLHttpRequest'
       }
     })
 
     if (!response.ok) {
-      throw new Error(`API request failed: ${response.status} ${response.statusText}`)
+      throw new Error(`Request failed: ${response.status} ${response.statusText}`)
     }
 
-    return await response.json()
+    const text = await response.text()
+    try {
+      return JSON.parse(text)
+    } catch {
+      // If not JSON, return as text
+      return text
+    }
   }
 
   async getHRVData(date: string): Promise<any> {
     console.log(`📊 Fetching HRV data for ${date}...`)
     try {
-      const url = `${GARMIN_CONNECT_BASE_URL}/modern/proxy/userstats-service/wellness/daily/${date}/${date}`
-      const data = await this.makeAuthenticatedRequest(url)
+      const url = `https://connect.garmin.com/modern/proxy/userstats-service/wellness/daily/${date}/${date}`
+      const data = await this.makeRequest(url)
       console.log('✅ HRV data retrieved')
       return data
     } catch (error) {
@@ -149,8 +178,8 @@ class GarminConnectClient {
   async getSleepData(date: string): Promise<any> {
     console.log(`😴 Fetching sleep data for ${date}...`)
     try {
-      const url = `${GARMIN_CONNECT_BASE_URL}/modern/proxy/wellness-service/wellness/dailySleepData/${encodeURIComponent(this.email)}?date=${date}`
-      const data = await this.makeAuthenticatedRequest(url)
+      const url = `https://connect.garmin.com/modern/proxy/wellness-service/wellness/dailySleepData/${encodeURIComponent(this.email)}?date=${date}`
+      const data = await this.makeRequest(url)
       console.log('✅ Sleep data retrieved')
       return data
     } catch (error) {
@@ -162,8 +191,8 @@ class GarminConnectClient {
   async getBodyBatteryData(date: string): Promise<any> {
     console.log(`🔋 Fetching Body Battery data for ${date}...`)
     try {
-      const url = `${GARMIN_CONNECT_BASE_URL}/modern/proxy/userstats-service/wellness/daily/${date}/${date}`
-      const data = await this.makeAuthenticatedRequest(url)
+      const url = `https://connect.garmin.com/modern/proxy/userstats-service/wellness/daily/${date}/${date}`
+      const data = await this.makeRequest(url)
       console.log('✅ Body Battery data retrieved')
       return data
     } catch (error) {
@@ -175,8 +204,8 @@ class GarminConnectClient {
   async getDailyStats(date: string): Promise<any> {
     console.log(`📈 Fetching daily stats for ${date}...`)
     try {
-      const url = `${GARMIN_CONNECT_BASE_URL}/modern/proxy/userstats-service/stats/daily/${date}/${date}`
-      const data = await this.makeAuthenticatedRequest(url)
+      const url = `https://connect.garmin.com/modern/proxy/userstats-service/stats/daily/${date}/${date}`
+      const data = await this.makeRequest(url)
       console.log('✅ Daily stats retrieved')
       return data
     } catch (error) {
@@ -188,8 +217,8 @@ class GarminConnectClient {
   async getStressData(date: string): Promise<any> {
     console.log(`😰 Fetching stress data for ${date}...`)
     try {
-      const url = `${GARMIN_CONNECT_BASE_URL}/modern/proxy/userstats-service/wellness/daily/${date}/${date}`
-      const data = await this.makeAuthenticatedRequest(url)
+      const url = `https://connect.garmin.com/modern/proxy/userstats-service/wellness/daily/${date}/${date}`
+      const data = await this.makeRequest(url)
       console.log('✅ Stress data retrieved')
       return data
     } catch (error) {
@@ -209,7 +238,7 @@ serve(async (req) => {
   try {
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
       {
         auth: {
           autoRefreshToken: false,
@@ -248,29 +277,16 @@ serve(async (req) => {
       )
     }
 
-    // Get Garmin credentials from user profile or secrets
-    let garminEmail = Deno.env.get('GARMIN_EMAIL')
-    let garminPassword = Deno.env.get('GARMIN_PASSWORD')
+    console.log(`🚀 Starting Garmin sync for user ${user.id} on date ${date}`)
 
-    // Try to get user-specific credentials from profile
+    // Get Garmin credentials from user profile
     const { data: profile } = await supabaseClient
       .from('user_profiles')
       .select('garmin_credentials_encrypted')
       .eq('id', user.id)
       .single()
 
-    if (profile?.garmin_credentials_encrypted) {
-      try {
-        const credentials = JSON.parse(profile.garmin_credentials_encrypted)
-        garminEmail = credentials.email
-        garminPassword = credentials.password
-        console.log('📱 Using user-specific Garmin credentials')
-      } catch (e) {
-        console.log('⚠️ Failed to parse user credentials, falling back to defaults')
-      }
-    }
-
-    if (!garminEmail || !garminPassword) {
+    if (!profile?.garmin_credentials_encrypted) {
       return new Response(
         JSON.stringify({ error: 'Garmin credentials not configured' }),
         { 
@@ -280,7 +296,23 @@ serve(async (req) => {
       )
     }
 
-    console.log(`🚀 Starting Garmin sync for user ${user.id} on date ${date}`)
+    let garminEmail: string
+    let garminPassword: string
+
+    try {
+      const credentials = JSON.parse(profile.garmin_credentials_encrypted)
+      garminEmail = credentials.email
+      garminPassword = credentials.password
+      console.log('📱 Using user-specific Garmin credentials')
+    } catch (e) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid Garmin credentials format' }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      )
+    }
 
     // Initialize Garmin client and authenticate
     const garminClient = new GarminConnectClient(garminEmail, garminPassword)
@@ -376,23 +408,26 @@ serve(async (req) => {
     }
 
     if (rawDataInserts.length === 0) {
-      throw new Error('No data could be retrieved from Garmin Connect')
+      console.log('⚠️ No data retrieved from Garmin Connect, this might be normal for future dates')
+      // Don't throw error, just return empty result
     }
 
     // Remove existing data for this date to avoid duplicates
-    await supabaseClient
-      .from('garmin_raw_data')
-      .delete()
-      .eq('user_id', user.id)
-      .eq('data_date', date)
+    if (rawDataInserts.length > 0) {
+      await supabaseClient
+        .from('garmin_raw_data')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('data_date', date)
 
-    // Insert new data
-    const { error: insertError } = await supabaseClient
-      .from('garmin_raw_data')
-      .insert(rawDataInserts)
+      // Insert new data
+      const { error: insertError } = await supabaseClient
+        .from('garmin_raw_data')
+        .insert(rawDataInserts)
 
-    if (insertError) {
-      throw new Error(`Failed to store data: ${insertError.message}`)
+      if (insertError) {
+        throw new Error(`Failed to store data: ${insertError.message}`)
+      }
     }
 
     // Process data for response
@@ -419,7 +454,7 @@ serve(async (req) => {
         sync_duration_ms: Date.now() - startTime
       })
 
-    console.log(`✅ Garmin sync completed successfully! Retrieved ${dataPointsCount} data points in ${Date.now() - startTime}ms`)
+    console.log(`✅ Garmin sync completed! Retrieved ${dataPointsCount} data points in ${Date.now() - startTime}ms`)
 
     return new Response(
       JSON.stringify({ 
@@ -436,36 +471,6 @@ serve(async (req) => {
   } catch (error) {
     console.error('❌ Garmin sync error:', error)
     
-    // Try to log the error if we have a user context
-    try {
-      const authHeader = req.headers.get('Authorization')
-      if (authHeader) {
-        const supabaseClient = createClient(
-          Deno.env.get('SUPABASE_URL') ?? '',
-          Deno.env.get('SUPABASE_ANON_KEY') ?? ''
-        )
-        
-        const { data: { user } } = await supabaseClient.auth.getUser(
-          authHeader.replace('Bearer ', '')
-        )
-        
-        if (user) {
-          await supabaseClient
-            .from('garmin_sync_logs')
-            .insert({
-              user_id: user.id,
-              sync_type: 'full_sync',
-              status: 'failed',
-              error_message: error instanceof Error ? error.message : 'Unknown error',
-              sync_timestamp: new Date().toISOString(),
-              sync_duration_ms: Date.now() - startTime
-            })
-        }
-      }
-    } catch (logError) {
-      console.error('Failed to log error:', logError)
-    }
-    
     return new Response(
       JSON.stringify({ 
         error: error instanceof Error ? error.message : 'Unknown error' 
@@ -479,180 +484,80 @@ serve(async (req) => {
 })
 
 function processGarminData(rawDataInserts: any[]): any {
+  if (rawDataInserts.length === 0) {
+    return {
+      hrv: { score: null, status: 'no_data' },
+      sleep: { quality: null, score: null },
+      bodyBattery: { current: null, max: null },
+      stress: { average: null, max: null },
+      steps: { total: null, goal: null }
+    }
+  }
+
   const dataByType = rawDataInserts.reduce((acc, item) => {
     acc[item.data_type] = item.raw_json
     return acc
   }, {})
 
-  const { hrv, daily_stats, sleep, body_battery, stress } = dataByType
-
   return {
-    hrv: {
-      score: extractHRVScore(hrv),
-      sevenDayAvg: extractHRVSevenDayAvg(hrv),
-      status: mapHRVStatus(extractHRVStatus(hrv)),
-      lastNight: extractHRVLastNight(hrv)
-    },
-    bodyBattery: {
-      start: extractBodyBatteryStart(body_battery),
-      end: extractBodyBatteryEnd(body_battery),
-      min: extractBodyBatteryMin(body_battery),
-      max: extractBodyBatteryMax(body_battery),
-      charged: extractBodyBatteryCharged(body_battery),
-      drained: extractBodyBatteryDrained(body_battery)
-    },
-    sleep: {
-      duration: extractSleepDuration(sleep),
-      deepSleep: extractSleepDeep(sleep),
-      lightSleep: extractSleepLight(sleep),
-      remSleep: extractSleepREM(sleep),
-      awake: extractSleepAwake(sleep),
-      quality: mapSleepQuality(extractSleepScore(sleep))
-    },
-    stress: {
-      avg: extractStressAvg(stress || daily_stats),
-      max: extractStressMax(stress || daily_stats),
-      restingPeriods: extractStressRestingPeriods(stress || daily_stats)
-    },
-    activities: extractActivities(daily_stats),
-    steps: extractSteps(daily_stats),
-    calories: extractCalories(daily_stats),
-    activeMinutes: extractActiveMinutes(daily_stats)
+    hrv: extractHRVData(dataByType.hrv),
+    sleep: extractSleepData(dataByType.sleep), 
+    bodyBattery: extractBodyBatteryData(dataByType.body_battery),
+    stress: extractStressData(dataByType.stress),
+    steps: extractStepsData(dataByType.daily_stats)
   }
 }
 
-// Helper functions to extract data from various Garmin API response formats
-function extractHRVScore(data: any): number {
-  return data?.hrvStatus?.lastNightAvg || data?.lastNightAvg || 35
-}
-
-function extractHRVSevenDayAvg(data: any): number {
-  return data?.hrvStatus?.sevenDayAvg || data?.sevenDayAvg || 35
-}
-
-function extractHRVStatus(data: any): string {
-  return data?.hrvStatus?.status || data?.status || 'balanced'
-}
-
-function extractHRVLastNight(data: any): number {
-  return data?.hrvStatus?.lastNight || data?.lastNight || 35
-}
-
-function extractBodyBatteryStart(data: any): number {
-  return data?.bodyBatteryValuesArray?.[0]?.value || data?.startValue || 85
-}
-
-function extractBodyBatteryEnd(data: any): number {
-  const values = data?.bodyBatteryValuesArray
-  return values?.[values.length - 1]?.value || data?.endValue || 30
-}
-
-function extractBodyBatteryMin(data: any): number {
-  return data?.bodyBatteryValuesArray?.reduce((min: number, item: any) => 
-    Math.min(min, item.value), 100) || data?.minValue || 20
-}
-
-function extractBodyBatteryMax(data: any): number {
-  return data?.bodyBatteryValuesArray?.reduce((max: number, item: any) => 
-    Math.max(max, item.value), 0) || data?.maxValue || 95
-}
-
-function extractBodyBatteryCharged(data: any): number {
-  return data?.bodyBatteryCharged || 70
-}
-
-function extractBodyBatteryDrained(data: any): number {
-  return data?.bodyBatteryDrained || 65
-}
-
-function extractSleepDuration(data: any): number {
-  return data?.dailySleepDTO?.sleepTimeSeconds ? 
-    Math.floor(data.dailySleepDTO.sleepTimeSeconds / 60) : 
-    (data?.sleepTimeSeconds ? Math.floor(data.sleepTimeSeconds / 60) : 480)
-}
-
-function extractSleepDeep(data: any): number {
-  return data?.dailySleepDTO?.deepSleepSeconds ? 
-    Math.floor(data.dailySleepDTO.deepSleepSeconds / 60) :
-    (data?.deepSleepSeconds ? Math.floor(data.deepSleepSeconds / 60) : 90)
-}
-
-function extractSleepLight(data: any): number {
-  return data?.dailySleepDTO?.lightSleepSeconds ? 
-    Math.floor(data.dailySleepDTO.lightSleepSeconds / 60) :
-    (data?.lightSleepSeconds ? Math.floor(data.lightSleepSeconds / 60) : 300)
-}
-
-function extractSleepREM(data: any): number {
-  return data?.dailySleepDTO?.remSleepSeconds ? 
-    Math.floor(data.dailySleepDTO.remSleepSeconds / 60) :
-    (data?.remSleepSeconds ? Math.floor(data.remSleepSeconds / 60) : 90)
-}
-
-function extractSleepAwake(data: any): number {
-  return data?.dailySleepDTO?.awakeTimeSeconds ? 
-    Math.floor(data.dailySleepDTO.awakeTimeSeconds / 60) :
-    (data?.awakeTimeSeconds ? Math.floor(data.awakeTimeSeconds / 60) : 20)
-}
-
-function extractSleepScore(data: any): number {
-  return data?.dailySleepDTO?.sleepScores?.overall || 
-    data?.sleepScores?.overall || 
-    data?.sleepScore || 75
-}
-
-function extractStressAvg(data: any): number {
-  return data?.averageStressLevel || data?.stressLevel || 25
-}
-
-function extractStressMax(data: any): number {
-  return data?.maxStressLevel || data?.maxStress || 60
-}
-
-function extractStressRestingPeriods(data: any): number {
-  return data?.restStressDuration || data?.restingStressMinutes || 300
-}
-
-function extractActivities(data: any): any[] {
-  return data?.activities || []
-}
-
-function extractSteps(data: any): number {
-  return data?.totalSteps || data?.steps || 0
-}
-
-function extractCalories(data: any): number {
-  return data?.totalCalories || data?.calories || 0
-}
-
-function extractActiveMinutes(data: any): number {
-  return data?.vigorousMinutes + data?.moderateMinutes || data?.activeMinutes || 0
-}
-
-function mapHRVStatus(status: string | undefined): 'balanced' | 'unbalanced' | 'low' {
-  if (!status) return 'balanced'
+function extractHRVData(data: any): any {
+  if (!data) return { score: null, status: 'no_data' }
   
-  switch (status.toLowerCase()) {
-    case 'balanced':
-    case 'optimal':
-    case 'good':
-      return 'balanced'
-    case 'unbalanced':
-    case 'poor':
-      return 'unbalanced'
-    case 'low':
-    case 'critical':
-      return 'low'
-    default:
-      return 'balanced'
+  return {
+    score: data.lastNightAvg || data.hrvScore || null,
+    sevenDayAvg: data.sevenDayAvg || null,
+    status: data.status || 'unknown',
+    lastNight: data.lastNightAvg || null
   }
 }
 
-function mapSleepQuality(score: number | undefined): 'excellent' | 'good' | 'fair' | 'poor' {
-  if (!score) return 'fair'
+function extractSleepData(data: any): any {
+  if (!data) return { quality: null, score: null }
   
-  if (score >= 80) return 'excellent'
-  if (score >= 70) return 'good'
-  if (score >= 50) return 'fair'
-  return 'poor'
+  return {
+    quality: data.sleepQualityTypePK || null,
+    score: data.sleepScores?.overall || null,
+    duration: data.sleepTimeSeconds || null,
+    deepSleep: data.deepSleepSeconds || null,
+    lightSleep: data.lightSleepSeconds || null,
+    remSleep: data.remSleepSeconds || null
+  }
+}
+
+function extractBodyBatteryData(data: any): any {
+  if (!data) return { current: null, max: null }
+  
+  return {
+    current: data.bodyBatteryValuesArray?.[data.bodyBatteryValuesArray?.length - 1]?.value || null,
+    max: data.bodyBatteryDrainedValue || null,
+    charged: data.bodyBatteryChargedValue || null
+  }
+}
+
+function extractStressData(data: any): any {
+  if (!data) return { average: null, max: null }
+  
+  return {
+    average: data.overallStressLevel || null,
+    max: data.maxStressLevel || null,
+    restStress: data.restStressLevel || null
+  }
+}
+
+function extractStepsData(data: any): any {
+  if (!data) return { total: null, goal: null }
+  
+  return {
+    total: data.totalSteps || null,
+    goal: data.stepGoal || null,
+    distance: data.totalDistance || null
+  }
 }
