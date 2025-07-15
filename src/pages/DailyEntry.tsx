@@ -205,9 +205,7 @@ const DailyEntry = () => {
       // Use direct Supabase upsert operation instead of the problematic function
       const { error } = await supabase
         .from('daily_metrics')
-        .upsert(cleanDataToSave, {
-          onConflict: 'user_id,metric_date'
-        });
+        .upsert(cleanDataToSave);
 
       if (error) {
         toast({
