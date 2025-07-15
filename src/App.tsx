@@ -5,12 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Link, useLocation } from "react-router-dom";
-import { BarChart3, Calendar, Plus, Settings, BookOpen, LogOut } from "lucide-react";
+import { BarChart3, Calendar, Plus, Settings, BookOpen, LogOut, User } from "lucide-react";
 import { AuthProvider, useAuth } from "@/components/AuthProvider";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import DailyEntry from "./pages/DailyEntry";
 import Journal from "./pages/Journal";
+import UserProfile from "./pages/UserProfile";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
@@ -77,8 +78,10 @@ const AppContent = () => {
                   </Button>
                 </>
               )}
-              <Button variant="ghost" size="icon">
-                <Settings className="h-4 w-4" />
+              <Button variant="ghost" size="icon" asChild>
+                <Link to="/profile">
+                  <User className="h-4 w-4" />
+                </Link>
               </Button>
             </div>
           </div>
@@ -102,6 +105,11 @@ const AppContent = () => {
           <Route path="/journal" element={
             <ProtectedRoute>
               <Journal />
+            </ProtectedRoute>
+          } />
+          <Route path="/profile" element={
+            <ProtectedRoute>
+              <UserProfile />
             </ProtectedRoute>
           } />
           <Route path="*" element={<NotFound />} />

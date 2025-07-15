@@ -14,11 +14,29 @@ A comprehensive health analytics dashboard integrating Garmin data for personal 
   - Implement proper OAuth flow
   - More stable and secure data access
 
+### Garmin Data Integration Roadmap
+- [ ] **Real-time Data Streaming**: Implement continuous data synchronization instead of manual pull triggers
+  - Set up webhooks or scheduled API pulls for automatic data updates
+  - Real-time HRV, sleep, and activity data integration
+  - Automated pattern detection and alerts based on incoming data streams
+- [ ] **Enhanced Data Processing**: Improve data validation and correlation analysis
+  - Advanced HRV timing corrections and baseline calibration
+  - Multi-device data fusion (Garmin + other wearables)
+  - Predictive health analytics based on historical patterns
+
+### Current Implementation
+The current system provides:
+- **Manual Data Sync**: Users can manually trigger Garmin data synchronization through the profile settings
+- **Basic Integration**: HRV, sleep, body battery, stress, and activity data collection
+- **User Credential Management**: Secure storage of Garmin Connect credentials in user profiles
+- **Data Storage**: Raw Garmin data stored in database with processing triggers for GAF analysis
+
 ### Technical Debt
 - [ ] Implement proper error handling for Garmin API failures
 - [ ] Add data validation for incoming Garmin metrics
 - [ ] Optimize database queries for analytics
 - [ ] Add automated testing for critical analysis functions
+- [ ] Implement proper encryption for stored credentials (currently basic JSON storage)
 
 ## How can I edit this code?
 
