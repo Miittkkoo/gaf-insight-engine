@@ -2,41 +2,86 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+/* GAF-System Design System - Health & Performance Analytics Platform */
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* Core Background & Surface Colors */
+    --background: 220 15% 7%;
+    --foreground: 210 20% 98%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card: 220 13% 10%;
+    --card-foreground: 210 20% 98%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover: 220 13% 10%;
+    --popover-foreground: 210 20% 98%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    /* Primary Brand Colors - Health-Tech Blue/Teal */
+    --primary: 187 85% 53%;
+    --primary-foreground: 220 15% 7%;
+    --primary-glow: 187 85% 68%;
+    --primary-deep: 187 85% 35%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    /* Secondary - Scientific Purple */
+    --secondary: 262 83% 58%;
+    --secondary-foreground: 210 20% 98%;
+    --secondary-glow: 262 83% 73%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    /* Health Status Colors */
+    --health-optimal: 142 76% 36%;
+    --health-good: 45 93% 47%;
+    --health-warning: 25 95% 53%;
+    --health-critical: 0 84% 60%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    /* Data Visualization Colors */
+    --data-hrv: 187 85% 53%;
+    --data-sleep: 262 83% 58%;
+    --data-stress: 25 95% 53%;
+    --data-recovery: 142 76% 36%;
+    --data-performance: 45 93% 47%;
 
-    --destructive: 0 84.2% 60.2%;
+    /* Surface & UI Elements */
+    --muted: 220 13% 15%;
+    --muted-foreground: 220 9% 46%;
+
+    --accent: 220 13% 15%;
+    --accent-foreground: 210 20% 98%;
+
+    --destructive: 0 84% 60%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: 220 13% 18%;
+    --input: 220 13% 18%;
+    --ring: 187 85% 53%;
 
-    --radius: 0.5rem;
+    /* Design System Extensions */
+    --radius: 0.75rem;
+    --radius-sm: 0.5rem;
+    --radius-lg: 1rem;
+
+    /* Gradients for Visual Impact */
+    --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)));
+    --gradient-secondary: linear-gradient(135deg, hsl(var(--secondary)), hsl(var(--secondary-glow)));
+    --gradient-health: linear-gradient(135deg, hsl(var(--health-optimal)), hsl(var(--data-recovery)));
+    --gradient-data: linear-gradient(45deg, hsl(var(--data-hrv)), hsl(var(--data-sleep)));
+    --gradient-surface: linear-gradient(135deg, hsl(var(--card)), hsl(var(--muted)));
+
+    /* Shadows & Glows */
+    --shadow-primary: 0 10px 30px -10px hsl(var(--primary) / 0.3);
+    --shadow-secondary: 0 10px 30px -10px hsl(var(--secondary) / 0.3);
+    --shadow-health: 0 8px 25px -8px hsl(var(--health-optimal) / 0.4);
+    --shadow-data: 0 4px 20px -4px hsl(var(--data-hrv) / 0.2);
+    --shadow-elevated: 0 20px 40px -15px hsl(220 15% 0% / 0.4);
+
+    /* Animation & Transitions */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-spring: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    --transition-data: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+
+    /* Typography Scale */
+    --font-display: 'Inter', 'SF Pro Display', system-ui, sans-serif;
+    --font-body: 'Inter', 'SF Pro Text', system-ui, sans-serif;
+    --font-mono: 'SF Mono', 'Monaco', 'Cascadia Code', monospace;
 
     --sidebar-background: 0 0% 98%;
 
@@ -56,41 +101,57 @@ All colors MUST be HSL.
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+    /* Enhanced dark mode - already optimal for health monitoring */
+    --background: 220 15% 7%;
+    --foreground: 210 20% 98%;
+    --card: 220 13% 10%;
+    --card-foreground: 210 20% 98%;
+    --muted: 220 13% 15%;
+    --muted-foreground: 220 9% 46%;
+    --border: 220 13% 18%;
+    --input: 220 13% 18%;
+  }
 
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
+  /* Light mode adaptation for GAF System */
+  .light {
+    --background: 210 20% 98%;
+    --foreground: 220 15% 7%;
+    --card: 0 0% 100%;
+    --card-foreground: 220 15% 7%;
+    --muted: 210 20% 95%;
+    --muted-foreground: 220 9% 54%;
+    --border: 220 13% 90%;
+    --input: 220 13% 90%;
+    
+    /* Adjust health colors for light mode */
+    --health-optimal: 142 76% 28%;
+    --health-good: 45 93% 39%;
+    --health-warning: 25 95% 45%;
+    --health-critical: 0 84% 52%;
+  }
+}
 
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+/* Enhanced Animations for Health Data */
+@layer base {
+  @keyframes pulse-health {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.8; transform: scale(1.05); }
+  }
+  
+  @keyframes slide-up {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  @keyframes glow {
+    0%, 100% { box-shadow: 0 0 20px hsl(var(--primary) / 0.3); }
+    50% { box-shadow: 0 0 30px hsl(var(--primary) / 0.6); }
+  }
+  
+  @keyframes data-flow {
+    0% { transform: translateX(-100%); opacity: 0; }
+    50% { opacity: 1; }
+    100% { transform: translateX(100%); opacity: 0; }
   }
 }
 

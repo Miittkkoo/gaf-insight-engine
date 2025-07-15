@@ -26,11 +26,14 @@ export default {
 				foreground: 'hsl(var(--foreground))',
 				primary: {
 					DEFAULT: 'hsl(var(--primary))',
-					foreground: 'hsl(var(--primary-foreground))'
+					foreground: 'hsl(var(--primary-foreground))',
+					glow: 'hsl(var(--primary-glow))',
+					deep: 'hsl(var(--primary-deep))'
 				},
 				secondary: {
 					DEFAULT: 'hsl(var(--secondary))',
-					foreground: 'hsl(var(--secondary-foreground))'
+					foreground: 'hsl(var(--secondary-foreground))',
+					glow: 'hsl(var(--secondary-glow))'
 				},
 				destructive: {
 					DEFAULT: 'hsl(var(--destructive))',
@@ -52,6 +55,19 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
+				health: {
+					optimal: 'hsl(var(--health-optimal))',
+					good: 'hsl(var(--health-good))',
+					warning: 'hsl(var(--health-warning))',
+					critical: 'hsl(var(--health-critical))'
+				},
+				data: {
+					hrv: 'hsl(var(--data-hrv))',
+					sleep: 'hsl(var(--data-sleep))',
+					stress: 'hsl(var(--data-stress))',
+					recovery: 'hsl(var(--data-recovery))',
+					performance: 'hsl(var(--data-performance))'
+				},
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',
 					foreground: 'hsl(var(--sidebar-foreground))',
@@ -62,6 +78,30 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				}
+			},
+			backgroundImage: {
+				'gradient-primary': 'var(--gradient-primary)',
+				'gradient-secondary': 'var(--gradient-secondary)',
+				'gradient-health': 'var(--gradient-health)',
+				'gradient-data': 'var(--gradient-data)',
+				'gradient-surface': 'var(--gradient-surface)'
+			},
+			fontFamily: {
+				'display': 'var(--font-display)',
+				'body': 'var(--font-body)',
+				'mono': 'var(--font-mono)'
+			},
+			boxShadow: {
+				'primary': 'var(--shadow-primary)',
+				'secondary': 'var(--shadow-secondary)',
+				'health': 'var(--shadow-health)',
+				'data': 'var(--shadow-data)',
+				'elevated': 'var(--shadow-elevated)'
+			},
+			transitionTimingFunction: {
+				'smooth': 'var(--transition-smooth)',
+				'spring': 'var(--transition-spring)',
+				'data': 'var(--transition-data)'
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
