@@ -50,6 +50,13 @@ export const useDailyMetrics = () => {
         throw new Error('Nicht angemeldet');
       }
 
+      // Debug logging für bessere Fehleranalyse
+      console.log('Saving metrics:', {
+        user_id: user.id,
+        metric_date: data.metric_date,
+        has_data: !!data
+      });
+
       const { data: result, error } = await supabase.rpc('save_daily_metrics_final', {
         p_user_id: user.id,
         p_metric_date: data.metric_date,
@@ -57,8 +64,16 @@ export const useDailyMetrics = () => {
       });
 
       if (error) {
+        console.error('Save error details:', {
+          message: error.message,
+          code: error.code,
+          details: error.details,
+          hint: error.hint
+        });
         throw error;
       }
+
+      console.log('Save successful:', result);
 
       toast({
         title: "Erfolgreich gespeichert",
