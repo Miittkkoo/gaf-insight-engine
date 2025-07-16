@@ -29,9 +29,9 @@ export function useGarminData(date: string) {
 
       console.log('Calling Garmin sync function for date:', date);
       
-      // Call the Garmin sync Edge Function using Supabase client
-      const { data: functionResult, error: functionError } = await supabase.functions.invoke('garmin-sync', {
-        body: { date },
+      // Call the Garmin bulk sync Edge Function
+      const { data: functionResult, error: functionError } = await supabase.functions.invoke('garmin-bulk-sync', {
+        body: { weeksPast: 1 }, // Only sync 1 week for single date
         headers: {
           Authorization: `Bearer ${session.access_token}`
         }
