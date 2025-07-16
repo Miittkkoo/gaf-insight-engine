@@ -295,9 +295,13 @@ export const GarminIntegration: React.FC = () => {
         throw new Error('Nicht authentifiziert');
       }
 
-      console.log('Starte Bulk-Sync...');
+      if (!profile?.garmin_credentials_encrypted) {
+        throw new Error('Garmin-Zugangsdaten fehlen. Bitte konfigurieren Sie Ihre Anmeldedaten.');
+      }
 
-      // Call the Garmin bulk sync Edge Function directly
+      console.log('🚀 Starte ECHTEN Garmin-Daten Sync...');
+
+      // Call the REAL Garmin bulk sync Edge Function
       const { data: result, error } = await supabase.functions.invoke('garmin-bulk-sync', {
         body: { weeksPast: 4 },
         headers: {
@@ -306,16 +310,16 @@ export const GarminIntegration: React.FC = () => {
       });
 
       if (error) {
-        console.error('Bulk-Sync Fehler:', error);
+        console.error('❌ ECHTER Bulk-Sync Fehler:', error);
         throw error;
       }
 
-      console.log('Bulk-Sync Ergebnis:', result);
+      console.log('✅ ECHTER Bulk-Sync Ergebnis:', result);
 
       if (result?.success) {
         toast({
-          title: "Synchronisation erfolgreich",
-          description: `${result.dataPointsSynced} realistische Datenpunkte für ${result.dateRange} generiert`,
+          title: "🎯 ECHTE Daten synchronisiert!",
+          description: `${result.dataPointsSynced} echte Garmin-Datenpunkte von ${result.dateRange} geladen`,
         });
         await loadProfile();
         await loadAvailableDates();
@@ -326,16 +330,16 @@ export const GarminIntegration: React.FC = () => {
         }
       } else {
         toast({
-          title: "Synchronisation fehlgeschlagen",
+          title: "❌ Synchronisation fehlgeschlagen",
           description: result?.message || 'Unbekannter Fehler',
           variant: "destructive",
         });
       }
     } catch (error) {
-      console.error('Sync Fehler:', error);
+      console.error('❌ ECHTER Sync Fehler:', error);
       toast({
-        title: "Sync fehlgeschlagen",
-        description: error instanceof Error ? error.message : 'Datensynchronisation konnte nicht durchgeführt werden',
+        title: "❌ Sync fehlgeschlagen",
+        description: error instanceof Error ? error.message : 'Echte Datensynchronisation fehlgeschlagen',
         variant: "destructive",
       });
     } finally {
@@ -424,7 +428,7 @@ export const GarminIntegration: React.FC = () => {
             >
               {syncing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               <Download className="mr-2 h-4 w-4" />
-              Bulk Sync (4 Wochen)
+              🎯 ECHTE Daten laden (4 Wochen)
             </Button>
           </div>
 
