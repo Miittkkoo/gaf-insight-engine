@@ -89,12 +89,12 @@ export function GarminValidationPanel() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Delete all records with empty JSON
+      // Delete all records with empty JSON - use textual comparison
       const { error } = await supabase
         .from('garmin_raw_data')
         .delete()
         .eq('user_id', user.id)
-        .is('raw_json', '{}');
+        .eq('raw_json', '{}');
 
       if (error) {
         console.error('Clean error:', error);

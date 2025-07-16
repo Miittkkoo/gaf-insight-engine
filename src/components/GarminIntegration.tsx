@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { GarminValidationPanel } from './GarminValidationPanel';
 import { 
   CheckCircle, 
   AlertCircle, 
@@ -586,6 +587,11 @@ export const GarminIntegration: React.FC = () => {
           )}
         </CardContent>
       </Card>
+      
+      {/* Validation Panel */}
+      <div className="mt-6">
+        <GarminValidationPanel />
+      </div>
     </div>
   );
 };
