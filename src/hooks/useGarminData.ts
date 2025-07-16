@@ -147,7 +147,7 @@ async function processRawGarminData(rawDataArray: any[]): Promise<GarminData | n
     
     switch (data_type) {
       case 'hrv':
-        // Handle different HRV data structures from real Garmin API
+        // Handle real Garmin API HRV data structure
         if (raw_json?.wellnessData?.length > 0) {
           const hrvData = raw_json.wellnessData[0];
           result.hrv = {
@@ -159,6 +159,7 @@ async function processRawGarminData(rawDataArray: any[]): Promise<GarminData | n
           result.lastNightAvg = hrvData.lastNightAvg;
           result.hrvStatus = hrvData.status;
         } else if (raw_json?.hrvSummary) {
+          // Fallback for alternative structure
           const hrv = raw_json.hrvSummary;
           result.hrv = {
             score: hrv.lastNightAvg || 0,
@@ -172,6 +173,7 @@ async function processRawGarminData(rawDataArray: any[]): Promise<GarminData | n
         break;
         
       case 'sleep':
+        // Handle real Garmin API sleep data structure
         if (raw_json?.dailySleepDTO) {
           const sleep = raw_json.dailySleepDTO;
           result.sleep = {
@@ -182,38 +184,40 @@ async function processRawGarminData(rawDataArray: any[]): Promise<GarminData | n
             awake: Math.round((sleep.awakeTimeSeconds || 0) / 60),
             quality: mapSleepQuality(sleep.sleepScore)
           };
-          // Add direct properties for backward compatibility
           result.sleepTimeSeconds = sleep.sleepTimeSeconds;
           result.sleepScore = sleep.sleepScore;
         }
         break;
         
+        
       case 'body_battery':
         if (raw_json) {
-          const bodyBatteryLevels = raw_json.bodyBatteryData?.map((d: any) => d.bodyBatteryLevel) || [0];
+          const bodyBatteryLevels = raw_json.bodyBatteryData?.map((d: any) => d.bodyBatteryLevel) || [raw_json.startLevel || 0, raw_json.endLevel || 0];
           result.bodyBattery = {
             start: raw_json.startLevel || 0,
             end: raw_json.endLevel || 0,
-            min: Math.min(...bodyBatteryLevels),
-            max: Math.max(...bodyBatteryLevels),
+            min: raw_json.minLevel || Math.min(...bodyBatteryLevels) || 0,
+            max: raw_json.maxLevel || Math.max(...bodyBatteryLevels) || 0,
             charged: raw_json.charged || 0,
             drained: raw_json.drained || 0
           };
-          // Add direct properties for backward compatibility
           result.endLevel = raw_json.endLevel;
           result.startLevel = raw_json.startLevel;
         }
         break;
         
       case 'steps':
-        if (raw_json?.dailyMovement) {
-          const movement = raw_json.dailyMovement;
-          result.steps = movement.totalSteps || 0;
-          result.calories = movement.caloriesBurned || 0;
-          result.activeMinutes = Math.round((movement.activeTimeSeconds || 0) / 60);
-          // Add direct properties for backward compatibility
-          result.totalSteps = movement.totalSteps;
-          result.caloriesBurned = movement.caloriesBurned;
+        if (raw_json) {
+          // Handle both formats: totalSteps directly or dailyMovement wrapper
+          const steps = raw_json.totalSteps || raw_json.dailyMovement?.totalSteps || 0;
+          const calories = raw_json.calories || raw_json.dailyMovement?.caloriesBurned || 0;
+          const activeSeconds = raw_json.activeMinutes ? raw_json.activeMinutes * 60 : (raw_json.dailyMovement?.activeTimeSeconds || 0);
+          
+          result.steps = steps;
+          result.calories = calories;
+          result.activeMinutes = Math.round(activeSeconds / 60);
+          result.totalSteps = steps;
+          result.caloriesBurned = calories;
         }
         break;
         
