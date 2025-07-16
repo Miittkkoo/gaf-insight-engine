@@ -7,7 +7,7 @@ import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/components/AuthProvider';
-import { GarminConnection } from '@/components/GarminConnection';
+import { GarminIntegration } from '@/components/GarminIntegration';
 import { Loader2, Save, User, Settings, Shield } from 'lucide-react';
 
 interface UserProfile {
@@ -351,7 +351,7 @@ export function UserProfile() {
       <Separator />
 
       {/* Garmin Integration Settings */}
-      <GarminConnection />
+      <GarminIntegration />
     </div>
   );
 }
