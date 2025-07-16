@@ -1,6 +1,6 @@
 // GAF Analysis Engine - Core Intelligence System
 
-import { DailyMetrics, AnalysisResults, Pattern, Recommendation, Alert } from '@/types/gaf';
+import { DailyMetrics, AnalysisResults, Pattern, Recommendation, Alert, GarminData } from '@/types/gaf';
 import { supabase } from '@/integrations/supabase/client';
 
 export class GAFAnalysisEngine {
@@ -96,33 +96,157 @@ export class GAFAnalysisEngine {
     };
   }
 
-  private async integrateGarminData(userId: string, date: Date) {
+  private async integrateGarminData(userId: string, date: Date): Promise<GarminData | null> {
     try {
-      // Try to get real Garmin data via Edge Function
-      const { data: { session } } = await supabase.auth.getSession();
+      console.log(`🔍 Integrating Garmin data for ${date.toISOString().split('T')[0]}`);
       
-      if (session?.access_token) {
-        const response = await fetch('/functions/v1/garmin-sync', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${session.access_token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ 
-            date: date.toISOString().split('T')[0] 
-          }),
-        });
-
-        if (response.ok) {
-          const { data: garminData } = await response.json();
-          return this.applyHRVTimingLogic(garminData, date);
-        }
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        console.warn('No authenticated user found');
+        return null;
       }
+
+      const { data: rawData, error } = await supabase
+        .from('garmin_raw_data')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('data_date', date.toISOString().split('T')[0])
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching raw Garmin data:', error);
+        return null;
+      }
+
+      if (!rawData || rawData.length === 0) {
+        console.warn(`No Garmin data found for date ${date.toISOString().split('T')[0]}`);
+        return null;
+      }
+
+      console.log(`✅ Found ${rawData.length} Garmin data entries for ${date.toISOString().split('T')[0]}`);
+      const processedData = await this.processRawGarminData(rawData);
+      return this.applyHRVTimingLogic(processedData, date);
+
     } catch (error) {
+      console.warn('Failed to fetch Garmin data, returning null for analysis');
+      return null;
     }
+  }
+
+  private async processRawGarminData(rawDataArray: any[]): Promise<GarminData | null> {
+    if (!rawDataArray || rawDataArray.length === 0) return null;
+
+    console.log('Processing raw Garmin data:', rawDataArray);
+
+    // Initialize result with defaults to prevent NaN and [object Object] errors
+    let result: GarminData = {
+      hrv: { score: 0, sevenDayAvg: 0, status: 'balanced', lastNight: 0 },
+      bodyBattery: { start: 0, end: 0, min: 0, max: 0, charged: 0, drained: 0 },
+      sleep: { duration: 0, deepSleep: 0, lightSleep: 0, remSleep: 0, awake: 0, quality: 'fair' },
+      stress: { avg: 0, max: 0, restingPeriods: 0 },
+      activities: [],
+      steps: 0,
+      calories: 0,
+      activeMinutes: 0,
+      lastSync: null
+    };
+
+    // Process each data type
+    rawDataArray.forEach(item => {
+      const { data_type, raw_json } = item;
+      
+      switch (data_type) {
+        case 'hrv':
+          if (raw_json?.hrvSummary) {
+            const hrv = raw_json.hrvSummary;
+            result.hrv = {
+              score: hrv.lastNightAvg || 0,
+              sevenDayAvg: hrv.sevenDayAvg || hrv.lastNightAvg || 0,
+              status: this.mapHRVStatus(hrv.status),
+              lastNight: hrv.lastNightAvg || 0
+            };
+          }
+          break;
+          
+        case 'sleep':
+          if (raw_json?.dailySleepDTO) {
+            const sleep = raw_json.dailySleepDTO;
+            result.sleep = {
+              duration: Math.round((sleep.sleepTimeSeconds || 0) / 60),
+              deepSleep: Math.round((sleep.deepSleepSeconds || 0) / 60),
+              lightSleep: Math.round((sleep.lightSleepSeconds || 0) / 60),
+              remSleep: Math.round((sleep.remSleepSeconds || 0) / 60),
+              awake: Math.round((sleep.awakeTimeSeconds || 0) / 60),
+              quality: this.mapSleepQuality(sleep.sleepScore)
+            };
+          }
+          break;
+          
+        case 'body_battery':
+          if (raw_json) {
+            const bodyBatteryLevels = raw_json.bodyBatteryData?.map((d: any) => d.bodyBatteryLevel) || [0];
+            result.bodyBattery = {
+              start: raw_json.startLevel || 0,
+              end: raw_json.endLevel || 0,
+              min: Math.min(...bodyBatteryLevels),
+              max: Math.max(...bodyBatteryLevels),
+              charged: raw_json.charged || 0,
+              drained: raw_json.drained || 0
+            };
+          }
+          break;
+          
+        case 'steps':
+          if (raw_json?.dailyMovement) {
+            const movement = raw_json.dailyMovement;
+            result.steps = movement.totalSteps || 0;
+            result.calories = movement.caloriesBurned || 0;
+            result.activeMinutes = Math.round((movement.activeTimeSeconds || 0) / 60);
+          }
+          break;
+          
+        case 'stress':
+          if (raw_json) {
+            result.stress = {
+              avg: raw_json.avgStressLevel || 0,
+              max: raw_json.maxStressLevel || 0,
+              restingPeriods: 0 // Not available in current data structure
+            };
+          }
+          break;
+      }
+    });
+
+    console.log('Processed result:', result);
+    return result;
+  }
+
+  private mapHRVStatus(status: string | undefined): 'balanced' | 'unbalanced' | 'low' {
+    if (!status) return 'balanced';
     
-    console.warn('Failed to fetch Garmin data, returning null for analysis');
-    return null;
+    switch (status.toLowerCase()) {
+      case 'balanced':
+      case 'optimal':
+      case 'good':
+        return 'balanced';
+      case 'unbalanced':
+      case 'poor':
+        return 'unbalanced';
+      case 'low':
+      case 'critical':
+        return 'low';
+      default:
+        return 'balanced';
+    }
+  }
+
+  private mapSleepQuality(score: number | undefined): 'excellent' | 'good' | 'fair' | 'poor' {
+    if (!score) return 'fair';
+    
+    if (score >= 80) return 'excellent';
+    if (score >= 70) return 'good';
+    if (score >= 50) return 'fair';
+    return 'poor';
   }
 
   private applyHRVTimingLogic(garminData: any, date: Date) {
@@ -173,75 +297,96 @@ export class GAFAnalysisEngine {
   }
 
   private async analyzePatterns(results: any): Promise<Pattern[]> {
+    console.log('🔍 Starting pattern analysis...');
+    
     const patterns: Pattern[] = [];
-
-    // HRV-Sleep Pattern
-    if (results.garmin.sleep.duration < 420) { // Less than 7 hours
-      patterns.push({
-        type: 'sleep_hrv_correlation',
-        confidence: 0.85,
-        description: 'Unzureichender Schlaf korreliert negativ mit HRV Recovery',
-        impact: 'negative'
-      });
+    
+    // Only analyze patterns if we have valid data
+    if (results.garmin && typeof results.garmin === 'object') {
+      console.log('✅ Valid Garmin data available for pattern analysis');
+      
+      // Sleep quality vs HRV pattern - with null checks
+      if (results.garmin.sleep?.duration && results.garmin.hrv?.score) {
+        if (results.garmin.sleep.duration < 420) { // Less than 7 hours
+          patterns.push({
+            type: 'sleep_hrv_correlation',
+            confidence: 0.85,
+            description: 'Unzureichender Schlaf korreliert negativ mit HRV Recovery',
+            impact: 'negative'
+          });
+        }
+      } else {
+        console.log('⚠️ Sleep or HRV data incomplete, skipping sleep-HRV pattern analysis');
+      }
+      
+      // Body Battery pattern - with null checks
+      if (results.garmin.bodyBattery?.end !== undefined) {
+        if (results.garmin.bodyBattery.end < 30) {
+          patterns.push({
+            type: 'energy_depletion',
+            confidence: 0.78,
+            description: 'Kritische Energieerschöpfung erkannt - Regeneration erforderlich',
+            impact: 'negative'
+          });
+        }
+      }
+      
+      // Positive Recovery Pattern - with null checks
+      if (results.garmin.hrv?.score && results.garmin.hrv?.sevenDayAvg) {
+        if (results.garmin.hrv.score > results.garmin.hrv.sevenDayAvg * 1.1) {
+          patterns.push({
+            type: 'optimal_recovery',
+            confidence: 0.92,
+            description: 'Überdurchschnittliche Recovery - optimale Leistungsbereitschaft',
+            impact: 'positive'
+          });
+        }
+      }
+    } else {
+      console.log('⚠️ No valid Garmin data for pattern analysis');
     }
-
-    // Body Battery Pattern
-    if (results.garmin.bodyBattery.end < 30) {
-      patterns.push({
-        type: 'energy_depletion',
-        confidence: 0.78,
-        description: 'Kritische Energieerschöpfung erkannt - Regeneration erforderlich',
-        impact: 'negative'
-      });
-    }
-
-    // Positive Recovery Pattern
-    if (results.garmin.hrv.score > results.garmin.hrv.sevenDayAvg * 1.1) {
-      patterns.push({
-        type: 'optimal_recovery',
-        confidence: 0.92,
-        description: 'Überdurchschnittliche Recovery - optimale Leistungsbereitschaft',
-        impact: 'positive'
-      });
-    }
-
+    
+    console.log(`✅ Found ${patterns.length} patterns`);
     return patterns;
   }
 
   private async generateRecommendations(results: any): Promise<Recommendation[]> {
     const recommendations: Recommendation[] = [];
 
-    // HRV-based recommendations
-    if (results.garmin.hrv.score < 35) {
-      recommendations.push({
-        priority: 1,
-        category: 'Recovery',
-        action: 'Aktive Regeneration: Leichte Bewegung, Meditation, früh schlafen',
-        expectedROI: 0.85,
-        timing: 'immediate'
-      });
-    }
+    // Only generate recommendations if we have valid Garmin data
+    if (results.garmin && typeof results.garmin === 'object') {
+      // HRV-based recommendations
+      if (results.garmin.hrv?.score && results.garmin.hrv.score < 35) {
+        recommendations.push({
+          priority: 1,
+          category: 'Recovery',
+          action: 'Aktive Regeneration: Leichte Bewegung, Meditation, früh schlafen',
+          expectedROI: 0.85,
+          timing: 'immediate'
+        });
+      }
 
-    // Sleep optimization
-    if (results.garmin.sleep.duration < 420) {
-      recommendations.push({
-        priority: 2,
-        category: 'Sleep',
-        action: 'Schlafzeit um 30-60 Minuten verlängern für optimale Recovery',
-        expectedROI: 0.75,
-        timing: 'today'
-      });
-    }
+      // Sleep optimization
+      if (results.garmin.sleep?.duration && results.garmin.sleep.duration < 420) {
+        recommendations.push({
+          priority: 2,
+          category: 'Sleep',
+          action: 'Schlafzeit um 30-60 Minuten verlängern für optimale Recovery',
+          expectedROI: 0.75,
+          timing: 'today'
+        });
+      }
 
-    // Stress management
-    if (results.garmin.stress.avg > 50) {
-      recommendations.push({
-        priority: 3,
-        category: 'Stress',
-        action: 'Stress-Reduktion durch Atemübungen oder kurze Meditation',
-        expectedROI: 0.65,
-        timing: 'immediate'
-      });
+      // Stress management
+      if (results.garmin.stress?.avg && results.garmin.stress.avg > 50) {
+        recommendations.push({
+          priority: 3,
+          category: 'Stress',
+          action: 'Stress-Reduktion durch Atemübungen oder kurze Meditation',
+          expectedROI: 0.65,
+          timing: 'immediate'
+        });
+      }
     }
 
     return recommendations.sort((a, b) => a.priority - b.priority);
@@ -250,31 +395,34 @@ export class GAFAnalysisEngine {
   private async detectCriticalAlerts(results: any): Promise<Alert[]> {
     const alerts: Alert[] = [];
 
-    // Critical HRV Alert
-    if (results.garmin.hrv.score < 25) {
-      alerts.push({
-        severity: 'critical',
-        message: 'HRV kritisch niedrig - Sofortige Regeneration erforderlich',
-        triggered: new Date()
-      });
-    }
+    // Only detect alerts if we have valid Garmin data
+    if (results.garmin && typeof results.garmin === 'object') {
+      // Critical HRV Alert
+      if (results.garmin.hrv?.score && results.garmin.hrv.score < 25) {
+        alerts.push({
+          severity: 'critical',
+          message: 'HRV kritisch niedrig - Sofortige Regeneration erforderlich',
+          triggered: new Date()
+        });
+      }
 
-    // Body Battery Warning
-    if (results.garmin.bodyBattery.end < 20) {
-      alerts.push({
-        severity: 'warning',
-        message: 'Body Battery kritisch niedrig - Energiemanagement erforderlich',
-        triggered: new Date()
-      });
-    }
+      // Body Battery Warning
+      if (results.garmin.bodyBattery?.end !== undefined && results.garmin.bodyBattery.end < 20) {
+        alerts.push({
+          severity: 'warning',
+          message: 'Body Battery kritisch niedrig - Energiemanagement erforderlich',
+          triggered: new Date()
+        });
+      }
 
-    // Sleep Quality Alert
-    if (results.garmin.sleep.quality === 'poor') {
-      alerts.push({
-        severity: 'warning',
-        message: 'Schlechte Schlafqualität erkannt - Schlafhygiene optimieren',
-        triggered: new Date()
-      });
+      // Sleep Quality Alert
+      if (results.garmin.sleep?.quality === 'poor') {
+        alerts.push({
+          severity: 'warning',
+          message: 'Schlechte Schlafqualität erkannt - Schlafhygiene optimieren',
+          triggered: new Date()
+        });
+      }
     }
 
     return alerts;
