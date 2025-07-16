@@ -6,43 +6,58 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Real Garmin Connect API Integration
+interface GarminDataResponse {
+  success: boolean;
+  data: any;
+  isEmpty: boolean;
+  error?: string;
+}
+
+// Comprehensive Garmin Connect API Integration
 class GarminConnectAPI {
   private sessionCookies: string = '';
   private csrfToken: string = '';
+  private isAuthenticated: boolean = false;
   
   async authenticate(email: string, password: string): Promise<boolean> {
     try {
-      console.log('🔐 Authenticating with Garmin Connect...');
+      console.log('🔐 Starting Garmin Connect authentication...');
       
-      // Step 1: Get initial page and CSRF token
+      // Reset state
+      this.sessionCookies = '';
+      this.csrfToken = '';
+      this.isAuthenticated = false;
+      
+      // Step 1: Get login page and extract CSRF token
       const loginPageResponse = await fetch('https://sso.garmin.com/sso/signin', {
         method: 'GET',
         headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
         }
       });
       
       if (!loginPageResponse.ok) {
-        throw new Error(`Failed to load login page: ${loginPageResponse.status}`);
+        throw new Error(`Login page request failed: ${loginPageResponse.status}`);
       }
       
       const loginPageContent = await loginPageResponse.text();
       
-      // Extract CSRF token from page
+      // Extract CSRF token
       const csrfMatch = loginPageContent.match(/name="_csrf"\s+value="([^"]+)"/);
       if (csrfMatch) {
         this.csrfToken = csrfMatch[1];
-        console.log('✅ CSRF token extracted');
+        console.log('✅ CSRF token extracted successfully');
+      } else {
+        throw new Error('Could not extract CSRF token from login page');
       }
       
-      // Store session cookies
+      // Store initial cookies
       const setCookie = loginPageResponse.headers.get('set-cookie');
       if (setCookie) {
         this.sessionCookies = setCookie.split(',').map(c => c.split(';')[0]).join('; ');
       }
       
-      // Step 2: Perform login
+      // Step 2: Perform authentication
       const loginData = new URLSearchParams({
         username: email,
         password: password,
@@ -82,23 +97,25 @@ class GarminConnectAPI {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
           'Cookie': this.sessionCookies,
-          'Referer': 'https://sso.garmin.com/sso/signin'
+          'Referer': 'https://sso.garmin.com/sso/signin',
+          'Origin': 'https://sso.garmin.com'
         },
         body: loginData.toString()
       });
       
       console.log(`Login response status: ${loginResponse.status}`);
       
+      // Update cookies from login response
+      const newCookies = loginResponse.headers.get('set-cookie');
+      if (newCookies) {
+        this.sessionCookies += '; ' + newCookies.split(',').map(c => c.split(';')[0]).join('; ');
+      }
+      
       if (loginResponse.ok || loginResponse.status === 302) {
-        // Update cookies from login response
-        const newCookies = loginResponse.headers.get('set-cookie');
-        if (newCookies) {
-          this.sessionCookies += '; ' + newCookies.split(',').map(c => c.split(';')[0]).join('; ');
-        }
-        
-        console.log('✅ Authentication successful');
+        this.isAuthenticated = true;
+        console.log('✅ Garmin Connect authentication successful');
         return true;
       } else {
         const responseText = await loginResponse.text();
@@ -107,45 +124,81 @@ class GarminConnectAPI {
       }
     } catch (error) {
       console.error('❌ Authentication error:', error);
+      this.isAuthenticated = false;
       return false;
     }
   }
   
-  async fetchGarminData(date: string, dataType: string): Promise<any> {
-    if (!this.sessionCookies) {
-      throw new Error('Not authenticated');
+  private getEndpoint(dataType: string, date: string): string {
+    const endpoints = {
+      'hrv': `https://connect.garmin.com/modern/proxy/userstats-service/wellness/daily/${date}/${date}?metricId=60`,
+      'sleep': `https://connect.garmin.com/modern/proxy/wellness-service/wellness/dailySleepData/${date}`,
+      'body_battery': `https://connect.garmin.com/modern/proxy/userstats-service/wellness/daily/${date}/${date}?metricId=58`,
+      'steps': `https://connect.garmin.com/modern/proxy/userstats-service/stats/daily/${date}`,
+      'stress': `https://connect.garmin.com/modern/proxy/userstats-service/wellness/daily/${date}/${date}?metricId=57`
+    };
+    
+    if (!endpoints[dataType as keyof typeof endpoints]) {
+      throw new Error(`Unknown data type: ${dataType}`);
     }
     
-    const dateStr = date.replace(/-/g, '');
-    let endpoint = '';
-    
-    switch (dataType) {
-      case 'hrv':
-        endpoint = `https://connect.garmin.com/modern/proxy/userstats-service/wellness/daily/${date}/${date}?metricId=60`;
-        break;
-      case 'sleep':
-        endpoint = `https://connect.garmin.com/modern/proxy/wellness-service/wellness/dailySleepData/${date}`;
-        break;
-      case 'body_battery':
-        endpoint = `https://connect.garmin.com/modern/proxy/userstats-service/wellness/daily/${date}/${date}?metricId=58`;
-        break;
-      case 'steps':
-        endpoint = `https://connect.garmin.com/modern/proxy/userstats-service/stats/daily/${date}`;
-        break;
-      case 'stress':
-        endpoint = `https://connect.garmin.com/modern/proxy/userstats-service/wellness/daily/${date}/${date}?metricId=57`;
-        break;
-      default:
-        throw new Error(`Unknown data type: ${dataType}`);
+    return endpoints[dataType as keyof typeof endpoints];
+  }
+  
+  private validateDataMeaningfulness(data: any, dataType: string): boolean {
+    if (!data || data === null || data === undefined) {
+      return false;
     }
     
-    console.log(`📡 Fetching real ${dataType} data from: ${endpoint}`);
+    // Check for empty objects or arrays
+    if (typeof data === 'object') {
+      if (Array.isArray(data)) {
+        return data.length > 0;
+      } else {
+        const keys = Object.keys(data);
+        if (keys.length === 0) {
+          return false;
+        }
+        
+        // Data type specific validation
+        switch (dataType) {
+          case 'hrv':
+            return data.wellnessData && Array.isArray(data.wellnessData) && data.wellnessData.length > 0;
+          case 'sleep':
+            return data.dailySleepDTO && typeof data.dailySleepDTO === 'object';
+          case 'body_battery':
+            return data.wellnessData && Array.isArray(data.wellnessData) && data.wellnessData.length > 0;
+          case 'steps':
+            return data.totalSteps !== undefined || data.steps !== undefined;
+          case 'stress':
+            return data.wellnessData && Array.isArray(data.wellnessData) && data.wellnessData.length > 0;
+          default:
+            return keys.length > 0;
+        }
+      }
+    }
+    
+    return true;
+  }
+  
+  async fetchData(date: string, dataType: string): Promise<GarminDataResponse> {
+    if (!this.isAuthenticated) {
+      return {
+        success: false,
+        data: null,
+        isEmpty: true,
+        error: 'Not authenticated'
+      };
+    }
     
     try {
+      const endpoint = this.getEndpoint(dataType, date);
+      console.log(`📡 Fetching ${dataType} data from: ${endpoint}`);
+      
       const response = await fetch(endpoint, {
         method: 'GET',
         headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
           'Cookie': this.sessionCookies,
           'Accept': 'application/json, text/plain, */*',
           'Accept-Language': 'en-US,en;q=0.9',
@@ -154,38 +207,54 @@ class GarminConnectAPI {
         }
       });
       
-      if (response.ok) {
-        const data = await response.json();
-        console.log(`✅ Successfully fetched real ${dataType} data:`, data ? 'Data available' : 'No data');
-        
-        // Check if data is meaningful - reject empty objects and arrays
-        if (!data || 
-            (typeof data === 'object' && Object.keys(data).length === 0) ||
-            (Array.isArray(data) && data.length === 0)) {
-          console.log(`⚠️ Empty or meaningless ${dataType} data for ${date} - returning null`);
-          return null;
-        }
-        
-        console.log(`📊 Valid ${dataType} data structure:`, JSON.stringify(data).substring(0, 200));
-        return data;
-      } else if (response.status === 204) {
-        console.log(`ℹ️ No ${dataType} data available for ${date}`);
-        return null;
-      } else {
-        console.error(`❌ Failed to fetch ${dataType} data: HTTP ${response.status}`);
-        const errorText = await response.text();
-        console.error('Error response:', errorText.substring(0, 500));
-        return null;
+      if (response.status === 204) {
+        console.log(`ℹ️ No ${dataType} data available for ${date} (204 No Content)`);
+        return {
+          success: true,
+          data: null,
+          isEmpty: true
+        };
       }
+      
+      if (!response.ok) {
+        console.error(`❌ Failed to fetch ${dataType} data: HTTP ${response.status}`);
+        return {
+          success: false,
+          data: null,
+          isEmpty: true,
+          error: `HTTP ${response.status}`
+        };
+      }
+      
+      const data = await response.json();
+      const isMeaningful = this.validateDataMeaningfulness(data, dataType);
+      
+      console.log(`✅ ${dataType} data received, meaningful: ${isMeaningful}`);
+      
+      if (isMeaningful) {
+        console.log(`📊 Valid ${dataType} data structure:`, JSON.stringify(data).substring(0, 200) + '...');
+      }
+      
+      return {
+        success: true,
+        data: isMeaningful ? data : null,
+        isEmpty: !isMeaningful
+      };
+      
     } catch (error) {
       console.error(`❌ Network error fetching ${dataType}:`, error);
-      return null;
+      return {
+        success: false,
+        data: null,
+        isEmpty: true,
+        error: error.message
+      };
     }
   }
 }
 
 serve(async (req) => {
-  console.log('🚀 Garmin Real Data Sync Function called');
+  console.log('🚀 Enhanced Garmin Data Sync Function started');
   
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -199,7 +268,7 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Get user from auth header
+    // Extract and validate user from JWT
     const authHeader = req.headers.get('authorization');
     if (!authHeader) {
       return new Response(JSON.stringify({
@@ -225,7 +294,7 @@ serve(async (req) => {
       });
     }
 
-    console.log(`🔄 Starting REAL data sync for user ${userId}, last ${weeksPast} weeks`);
+    console.log(`🔄 Starting enhanced sync for user ${userId}, last ${weeksPast} weeks`);
 
     // Get user's Garmin credentials
     const { data: profile } = await supabase
@@ -255,10 +324,10 @@ serve(async (req) => {
       });
     }
 
-    // Initialize Garmin API client
+    // Initialize enhanced Garmin API client
     const garminAPI = new GarminConnectAPI();
     
-    // Authenticate with real Garmin credentials
+    // Authenticate
     const authSuccess = await garminAPI.authenticate(credentials.email, credentials.password);
     if (!authSuccess) {
       return new Response(JSON.stringify({
@@ -274,7 +343,7 @@ serve(async (req) => {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - (weeksPast * 7));
 
-    console.log(`📅 Fetching REAL data for range: ${startDate.toISOString().split('T')[0]} to ${endDate.toISOString().split('T')[0]}`);
+    console.log(`📅 Sync range: ${startDate.toISOString().split('T')[0]} to ${endDate.toISOString().split('T')[0]}`);
 
     // Clear existing data first
     const { error: deleteError } = await supabase
@@ -285,61 +354,64 @@ serve(async (req) => {
     if (deleteError) {
       console.warn('Could not clear existing data:', deleteError.message);
     } else {
-      console.log('✅ Cleared existing data');
+      console.log('✅ Cleared existing Garmin data');
     }
 
     const dataTypes = ['hrv', 'sleep', 'body_battery', 'steps', 'stress'];
     let totalDataPoints = 0;
+    let totalEmptyResponses = 0;
     const errors: string[] = [];
+    const syncResults: Record<string, any> = {};
 
-    // Fetch REAL data for each day in the range
+    // Fetch data for each day
     const currentDate = new Date(startDate);
     while (currentDate <= endDate) {
       const dateString = currentDate.toISOString().split('T')[0];
       
-      console.log(`📊 Fetching REAL Garmin data for ${dateString}`);
+      console.log(`📊 Processing data for ${dateString}`);
 
-      // Fetch real data for all types for this date
       for (const dataType of dataTypes) {
         try {
-          const realData = await garminAPI.fetchGarminData(dateString, dataType);
+          const result = await garminAPI.fetchData(dateString, dataType);
           
-          // Only store meaningful data (not null, not empty objects/arrays)
-          if (realData !== null && realData !== undefined) {
-            console.log(`📝 Attempting to store ${dataType} data for ${dateString}`);
-            const dataPreview = JSON.stringify(realData).substring(0, 200);
-            console.log(`📄 Data preview: ${dataPreview}...`);
-            
-            const { error: insertError } = await supabase
-              .from('garmin_raw_data')
-              .insert({
-                user_id: userId,
-                data_date: dateString,
-                data_type: dataType,
-                raw_json: realData,
-                processed: false
-              });
+          if (!result.success) {
+            errors.push(`${dateString}/${dataType}: ${result.error || 'Unknown error'}`);
+            continue;
+          }
+          
+          if (result.isEmpty) {
+            totalEmptyResponses++;
+            console.log(`⚪ No meaningful ${dataType} data for ${dateString}`);
+            continue;
+          }
+          
+          // Store meaningful data
+          const { error: insertError } = await supabase
+            .from('garmin_raw_data')
+            .insert({
+              user_id: userId,
+              data_date: dateString,
+              data_type: dataType,
+              raw_json: result.data,
+              processed: false
+            });
 
-            if (insertError) {
-              errors.push(`${dateString}/${dataType}: ${insertError.message}`);
-              console.error(`❌ Failed to store ${dataType} for ${dateString}:`, insertError.message);
-            } else {
-              totalDataPoints++;
-              console.log(`✅ Stored REAL ${dataType} data for ${dateString}`);
-            }
+          if (insertError) {
+            errors.push(`${dateString}/${dataType}: ${insertError.message}`);
+            console.error(`❌ Failed to store ${dataType} for ${dateString}:`, insertError.message);
           } else {
-            console.log(`⚠️ No meaningful ${dataType} data for ${dateString} - skipping storage`);
+            totalDataPoints++;
+            console.log(`✅ Stored ${dataType} data for ${dateString}`);
           }
         } catch (error) {
-          console.error(`❌ Failed to fetch REAL ${dataType} for ${dateString}:`, error);
+          console.error(`❌ Error processing ${dataType} for ${dateString}:`, error);
           errors.push(`${dateString}/${dataType}: ${error.message}`);
         }
         
-        // Small delay to avoid rate limiting
-        await new Promise(resolve => setTimeout(resolve, 200));
+        // Rate limiting delay
+        await new Promise(resolve => setTimeout(resolve, 150));
       }
 
-      // Move to next day
       currentDate.setDate(currentDate.getDate() + 1);
     }
 
@@ -349,32 +421,33 @@ serve(async (req) => {
       garmin_connected: true
     }).eq('id', userId);
 
-    // Log sync
+    // Log sync operation
     await supabase.from('garmin_sync_logs').insert({
       user_id: userId,
-      sync_type: 'bulk_real_data',
+      sync_type: 'enhanced_bulk_sync',
       status: errors.length > 0 ? 'partial_success' : 'success',
       data_points_synced: totalDataPoints,
       error_message: errors.length > 0 ? `${errors.length} errors occurred` : null,
       sync_timestamp: new Date().toISOString()
     });
 
-    console.log(`✅ REAL data sync completed: ${totalDataPoints} data points, ${errors.length} errors`);
+    console.log(`✅ Enhanced sync completed: ${totalDataPoints} data points stored, ${totalEmptyResponses} empty responses, ${errors.length} errors`);
 
     return new Response(JSON.stringify({
       success: true,
       dataPointsSynced: totalDataPoints,
+      emptyResponses: totalEmptyResponses,
       dateRange: `${startDate.toISOString().split('T')[0]} to ${endDate.toISOString().split('T')[0]}`,
       errors: errors,
-      message: `Successfully synced ${totalDataPoints} REAL Garmin data points${errors.length > 0 ? ` with ${errors.length} errors` : ''}`,
-      dataSource: 'REAL_GARMIN_CONNECT_API'
+      message: `Successfully synced ${totalDataPoints} meaningful Garmin data points${errors.length > 0 ? ` with ${errors.length} errors` : ''}`,
+      dataSource: 'ENHANCED_GARMIN_CONNECT_API'
     }), {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
 
   } catch (error) {
-    console.error('❌ Real data sync error:', error);
+    console.error('❌ Enhanced sync error:', error);
     return new Response(JSON.stringify({
       success: false,
       error: 'Internal server error',

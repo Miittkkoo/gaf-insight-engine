@@ -5,7 +5,8 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { GarminValidationPanel } from './GarminValidationPanel';
+import { useGarminSync } from '@/hooks/useGarminSync';
+import { GarminSyncManager } from './GarminSyncManager';
 import { 
   CheckCircle, 
   AlertCircle, 
@@ -24,7 +25,7 @@ import {
 import { format, subDays } from 'date-fns';
 import { de } from 'date-fns/locale';
 import { supabase } from '@/integrations/supabase/client';
-import { garminConnectionService } from '@/services/garminConnectionService';
+
 import { useToast } from '@/hooks/use-toast';
 
 interface GarminProfile {
