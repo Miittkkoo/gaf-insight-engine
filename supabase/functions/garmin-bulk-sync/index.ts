@@ -157,6 +157,16 @@ class GarminConnectAPI {
       if (response.ok) {
         const data = await response.json();
         console.log(`✅ Successfully fetched real ${dataType} data:`, data ? 'Data available' : 'No data');
+        
+        // Check if data is meaningful - reject empty objects and arrays
+        if (!data || 
+            (typeof data === 'object' && Object.keys(data).length === 0) ||
+            (Array.isArray(data) && data.length === 0)) {
+          console.log(`⚠️ Empty or meaningless ${dataType} data for ${date} - returning null`);
+          return null;
+        }
+        
+        console.log(`📊 Valid ${dataType} data structure:`, JSON.stringify(data).substring(0, 200));
         return data;
       } else if (response.status === 204) {
         console.log(`ℹ️ No ${dataType} data available for ${date}`);
@@ -294,15 +304,9 @@ serve(async (req) => {
         try {
           const realData = await garminAPI.fetchGarminData(dateString, dataType);
           
-          // Debug: Log what we got from API
-          console.log(`🔍 Raw ${dataType} data for ${dateString}:`, realData ? 'Data exists' : 'No data');
-          if (realData) {
-            console.log(`📊 Data structure: ${JSON.stringify(realData).substring(0, 300)}...`);
-          }
-          
-          // Store any non-null data (be more permissive)
+          // Only store meaningful data (not null, not empty objects/arrays)
           if (realData !== null && realData !== undefined) {
-            console.log(`📝 Storing ${dataType} data for ${dateString} (${typeof realData})`);
+            console.log(`📝 Attempting to store ${dataType} data for ${dateString}`);
             const dataPreview = JSON.stringify(realData).substring(0, 200);
             console.log(`📄 Data preview: ${dataPreview}...`);
             
