@@ -185,8 +185,15 @@ export const GarminIntegration: React.FC = () => {
       const hrv = dataByType.hrv.hrvSummary;
       result.hrv = {
         score: hrv.lastNightAvg || 0,
-        status: hrv.status || 'balanced',
+        status: hrv.status?.toLowerCase() || 'balanced',
         sevenDayAvg: hrv.sevenDayAvg || hrv.lastNightAvg || 0
+      };
+    } else if (dataByType.hrv?.lastNightAvg) {
+      // Handle alternative HRV structure
+      result.hrv = {
+        score: dataByType.hrv.lastNightAvg || 0,
+        status: dataByType.hrv.status?.toLowerCase() || 'balanced',
+        sevenDayAvg: dataByType.hrv.sevenDayAvg || dataByType.hrv.lastNightAvg || 0
       };
     }
 
@@ -310,7 +317,8 @@ export const GarminIntegration: React.FC = () => {
     switch (status?.toLowerCase()) {
       case 'balanced': return 'text-green-600';
       case 'unbalanced': return 'text-yellow-600';
-      case 'poor': return 'text-red-600';
+      case 'poor': 
+      case 'low': return 'text-red-600';
       default: return 'text-gray-600';
     }
   };
