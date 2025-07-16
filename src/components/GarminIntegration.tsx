@@ -373,7 +373,11 @@ export const GarminIntegration: React.FC = () => {
         <CardContent className="flex items-center justify-center py-8">
           <Loader2 className="h-6 w-6 animate-spin" />
         </CardContent>
-      </Card>
+      
+      <div className="mt-6">
+        <GarminValidationPanel />
+      </div>
+    </Card>
     );
   }
 

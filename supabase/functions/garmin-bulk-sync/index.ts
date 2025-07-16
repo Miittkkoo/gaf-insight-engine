@@ -294,7 +294,10 @@ serve(async (req) => {
         try {
           const realData = await garminAPI.fetchGarminData(dateString, dataType);
           
-          if (realData) {
+          // Only store if we have actual data
+          if (realData && Object.keys(realData).length > 0) {
+            console.log(`📝 Storing ${dataType} data for ${dateString}:`, JSON.stringify(realData).substring(0, 200));
+            
             const { error: insertError } = await supabase
               .from('garmin_raw_data')
               .insert({
@@ -313,7 +316,7 @@ serve(async (req) => {
               console.log(`✅ Stored REAL ${dataType} data for ${dateString}`);
             }
           } else {
-            console.log(`ℹ️ No real ${dataType} data available for ${dateString}`);
+            console.log(`⚠️ No meaningful ${dataType} data for ${dateString} - skipping storage`);
           }
         } catch (error) {
           console.error(`❌ Failed to fetch REAL ${dataType} for ${dateString}:`, error);
@@ -321,7 +324,7 @@ serve(async (req) => {
         }
         
         // Small delay to avoid rate limiting
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise(resolve => setTimeout(resolve, 200));
       }
 
       // Move to next day
