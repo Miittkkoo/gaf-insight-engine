@@ -143,10 +143,22 @@ async function processRawGarminData(rawDataArray: any[]): Promise<GarminData | n
   // Process each data type
   rawDataArray.forEach(item => {
     const { data_type, raw_json } = item;
+    console.log(`Processing ${data_type} data:`, raw_json);
     
     switch (data_type) {
       case 'hrv':
-        if (raw_json?.hrvSummary) {
+        // Handle different HRV data structures from real Garmin API
+        if (raw_json?.wellnessData?.length > 0) {
+          const hrvData = raw_json.wellnessData[0];
+          result.hrv = {
+            score: hrvData.lastNightAvg || 0,
+            sevenDayAvg: hrvData.sevenDayAvg || hrvData.lastNightAvg || 0,
+            status: mapHRVStatus(hrvData.status),
+            lastNight: hrvData.lastNightAvg || 0
+          };
+          result.lastNightAvg = hrvData.lastNightAvg;
+          result.hrvStatus = hrvData.status;
+        } else if (raw_json?.hrvSummary) {
           const hrv = raw_json.hrvSummary;
           result.hrv = {
             score: hrv.lastNightAvg || 0,
@@ -154,7 +166,6 @@ async function processRawGarminData(rawDataArray: any[]): Promise<GarminData | n
             status: mapHRVStatus(hrv.status),
             lastNight: hrv.lastNightAvg || 0
           };
-          // Add direct properties for backward compatibility
           result.lastNightAvg = hrv.lastNightAvg;
           result.hrvStatus = hrv.status;
         }
