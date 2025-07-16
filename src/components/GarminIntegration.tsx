@@ -109,12 +109,27 @@ export const GarminIntegration: React.FC = () => {
   };
 
   const loadAvailableDates = async () => {
-    const dates = await garminConnectionService.getAvailableDataDates();
-    setAvailableDates(dates);
-    
-    // Set most recent date as default if available
-    if (dates.length > 0 && !selectedDate) {
-      setSelectedDate(dates[0]);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: rawData } = await supabase
+        .from('garmin_raw_data')
+        .select('data_date')
+        .eq('user_id', user.id)
+        .order('data_date', { ascending: false });
+
+      if (rawData) {
+        const uniqueDates = [...new Set(rawData.map(item => item.data_date))];
+        setAvailableDates(uniqueDates);
+        
+        // Set most recent date as default if available
+        if (uniqueDates.length > 0 && !selectedDate) {
+          setSelectedDate(uniqueDates[0]);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading available dates:', error);
     }
   };
 
@@ -263,19 +278,32 @@ export const GarminIntegration: React.FC = () => {
   const testConnection = async () => {
     setTesting(true);
     try {
-      const result = await garminConnectionService.testConnection();
-      if (result.success) {
-        toast({
-          title: "Verbindung erfolgreich",
-          description: result.message,
-        });
-        await loadProfile();
-      } else {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session?.access_token) {
+        throw new Error('Nicht authentifiziert');
+      }
+
+      // Simple test - just check if we can access Garmin function
+      const { error } = await supabase.functions.invoke('garmin-bulk-sync', {
+        body: { test: true },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
+        }
+      });
+
+      if (error) {
         toast({
           title: "Verbindung fehlgeschlagen",
-          description: result.message,
+          description: "Garmin-Service nicht erreichbar",
           variant: "destructive",
         });
+      } else {
+        toast({
+          title: "Verbindung erfolgreich",
+          description: "Garmin-Service ist erreichbar",
+        });
+        await loadProfile();
       }
     } catch (error) {
       toast({
@@ -375,10 +403,6 @@ export const GarminIntegration: React.FC = () => {
         <CardContent className="flex items-center justify-center py-8">
           <Loader2 className="h-6 w-6 animate-spin" />
         </CardContent>
-      
-      <div className="mt-6">
-        <GarminValidationPanel />
-      </div>
     </Card>
     );
   }
@@ -589,10 +613,8 @@ export const GarminIntegration: React.FC = () => {
         </CardContent>
       </Card>
       
-      {/* Validation Panel */}
-      <div className="mt-6">
-        <GarminValidationPanel />
-      </div>
+      {/* Sync Manager */}
+      <GarminSyncManager />
     </div>
   );
 };
