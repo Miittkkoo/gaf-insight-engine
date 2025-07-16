@@ -180,20 +180,20 @@ export const GarminIntegration: React.FC = () => {
       }
     };
 
-    // Process HRV data
-    if (dataByType.hrv?.hrvSummary) {
-      const hrv = dataByType.hrv.hrvSummary;
+    // Process HRV data - handle wellnessData structure
+    if (dataByType.hrv?.wellnessData?.length > 0) {
+      const hrv = dataByType.hrv.wellnessData[0];
       result.hrv = {
         score: hrv.lastNightAvg || 0,
         status: hrv.status?.toLowerCase() || 'balanced',
         sevenDayAvg: hrv.sevenDayAvg || hrv.lastNightAvg || 0
       };
-    } else if (dataByType.hrv?.lastNightAvg) {
-      // Handle alternative HRV structure
+    } else if (dataByType.hrv?.hrvSummary) {
+      const hrv = dataByType.hrv.hrvSummary;
       result.hrv = {
-        score: dataByType.hrv.lastNightAvg || 0,
-        status: dataByType.hrv.status?.toLowerCase() || 'balanced',
-        sevenDayAvg: dataByType.hrv.sevenDayAvg || dataByType.hrv.lastNightAvg || 0
+        score: hrv.lastNightAvg || 0,
+        status: hrv.status?.toLowerCase() || 'balanced',
+        sevenDayAvg: hrv.sevenDayAvg || hrv.lastNightAvg || 0
       };
     }
 
@@ -210,20 +210,27 @@ export const GarminIntegration: React.FC = () => {
       };
     }
 
-    // Process body battery data
+    // Process body battery data - new realistic structure
     if (dataByType.body_battery) {
       const bb = dataByType.body_battery;
-      const batteryLevels = bb.bodyBatteryData?.map((d: any) => d.bodyBatteryLevel) || [0];
       result.bodyBattery = {
         start: bb.startLevel || 0,
         end: bb.endLevel || 0,
-        min: Math.min(...batteryLevels),
-        max: Math.max(...batteryLevels)
+        min: bb.minLevel || 0,
+        max: bb.maxLevel || 100
       };
     }
 
-    // Process steps data
-    if (dataByType.steps?.dailyMovement) {
+    // Process steps data - handle both structures
+    if (dataByType.steps?.totalSteps) {
+      // Direct structure from new realistic data
+      result.activity = {
+        steps: dataByType.steps.totalSteps || 0,
+        calories: dataByType.steps.calories || 0,
+        activeMinutes: dataByType.steps.activeMinutes || 0
+      };
+    } else if (dataByType.steps?.dailyMovement) {
+      // Nested structure
       const movement = dataByType.steps.dailyMovement;
       result.activity = {
         steps: movement.totalSteps || 0,
@@ -282,11 +289,33 @@ export const GarminIntegration: React.FC = () => {
   const bulkSync = async () => {
     setSyncing(true);
     try {
-      const result = await garminConnectionService.bulkSync(4);
-      if (result.success) {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session?.access_token) {
+        throw new Error('Nicht authentifiziert');
+      }
+
+      console.log('Starte Bulk-Sync...');
+
+      // Call the Garmin bulk sync Edge Function directly
+      const { data: result, error } = await supabase.functions.invoke('garmin-bulk-sync', {
+        body: { weeksPast: 4 },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
+        }
+      });
+
+      if (error) {
+        console.error('Bulk-Sync Fehler:', error);
+        throw error;
+      }
+
+      console.log('Bulk-Sync Ergebnis:', result);
+
+      if (result?.success) {
         toast({
           title: "Synchronisation erfolgreich",
-          description: `${result.dataPointsSynced} Datenpunkte für ${result.dateRange} synchronisiert`,
+          description: `${result.dataPointsSynced} realistische Datenpunkte für ${result.dateRange} generiert`,
         });
         await loadProfile();
         await loadAvailableDates();
@@ -298,14 +327,15 @@ export const GarminIntegration: React.FC = () => {
       } else {
         toast({
           title: "Synchronisation fehlgeschlagen",
-          description: result.message,
+          description: result?.message || 'Unbekannter Fehler',
           variant: "destructive",
         });
       }
     } catch (error) {
+      console.error('Sync Fehler:', error);
       toast({
         title: "Sync fehlgeschlagen",
-        description: "Datensynchronisation konnte nicht durchgeführt werden",
+        description: error instanceof Error ? error.message : 'Datensynchronisation konnte nicht durchgeführt werden',
         variant: "destructive",
       });
     } finally {
