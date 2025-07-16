@@ -294,9 +294,17 @@ serve(async (req) => {
         try {
           const realData = await garminAPI.fetchGarminData(dateString, dataType);
           
-          // Only store if we have actual data
-          if (realData && Object.keys(realData).length > 0) {
-            console.log(`📝 Storing ${dataType} data for ${dateString}:`, JSON.stringify(realData).substring(0, 200));
+          // Debug: Log what we got from API
+          console.log(`🔍 Raw ${dataType} data for ${dateString}:`, realData ? 'Data exists' : 'No data');
+          if (realData) {
+            console.log(`📊 Data structure: ${JSON.stringify(realData).substring(0, 300)}...`);
+          }
+          
+          // Store any non-null data (be more permissive)
+          if (realData !== null && realData !== undefined) {
+            console.log(`📝 Storing ${dataType} data for ${dateString} (${typeof realData})`);
+            const dataPreview = JSON.stringify(realData).substring(0, 200);
+            console.log(`📄 Data preview: ${dataPreview}...`);
             
             const { error: insertError } = await supabase
               .from('garmin_raw_data')
