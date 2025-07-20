@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GAF System - Dynamic Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .refresh-controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+        
+        .btn:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+        
+        .btn.loading {
+            background: #95a5a6;
+            cursor: not-allowed;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-left: 10px;
+        }
+        
+        .status-success { background: #27ae60; }
+        .status-error { background: #e74c3c; }
+        .status-loading { background: #f39c12; animation: pulse 1s infinite; }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+        }
+        
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        
+        .card-title-section {
+            display: flex;
+            align-items: center;
+        }
+        
+        .card-icon {
+            font-size: 1.5rem;
+            margin-right: 10px;
+        }
+        
+        .card-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .last-updated {
+            font-size: 0.8rem;
+            color: #7f8c8d;
+        }
+        
+        .task-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 12px;
+            margin: 5px 0;
+            border-radius: 8px;
+            transition: background-color 0.2s ease;
+        }
+        
+        .task-item:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .task-status {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        
+        .status-todo { background-color: #e74c3c; }
+        .status-progress { background-color: #f39c12; }
+        .status-review { background-color: #3498db; }
+        .status-done { background-color: #27ae60; }
+        
+        .task-text {
+            flex: 1;
+            font-size: 0.9rem;
+        }
+        
+        .task-points {
+            background: #ecf0f1;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #7f8c8d;
+        }
+        
+        .error-message {
+            background: #ffebee;
+            color: #c62828;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            border-left: 4px solid #e74c3c;
+        }
+        
+        .loading-skeleton {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+            height: 20px;
+            border-radius: 4px;
+            margin: 5px 0;
+        }
+        
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        
+        .file-browser {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        .file-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .file-item {
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 2px solid transparent;
+        }
+        
+        .file-item:hover {
+            background: #e9ecef;
+            border-color: #3498db;
+        }
+        
+        .file-item.selected {
+            background: #e3f2fd;
+            border-color: #2196f3;
+        }
+        
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .metric-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .metric-value {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .metric-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔄 GAF System Dynamic Dashboard</h1>
+            <p id="connection-status">Prüfe Server-Verbindung...</p>
+            <div id="server-info" style="margin-top: 10px; font-size: 0.9rem; opacity: 0.8;"></div>
+        </div>
+        
+        <div class="refresh-controls">
+            <button class="btn" onclick="loadAllData()">
+                🔄 Alle Daten aktualisieren
+                <span id="refresh-status" class="status-indicator"></span>
+            </button>
+            <button class="btn" onclick="toggleAutoRefresh()">
+                <span id="auto-refresh-text">⏰ Auto-Refresh aktivieren</span>
+            </button>
+            <button class="btn" onclick="showFileBrowser()">
+                📁 Dateien durchsuchen
+            </button>
+        </div>
+        
+        <div id="file-browser" class="file-browser" style="display: none;">
+            <div class="card-header">
+                <div class="card-title-section">
+                    <span class="card-icon">📁</span>
+                    <span class="card-title">BMad Core Dateien</span>
+                </div>
+            </div>
+            <div id="file-list" class="file-list"></div>
+        </div>
+        
+        <div class="dashboard-grid">
+            <!-- Kanban Board Tasks -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title-section">
+                        <span class="card-icon">📋</span>
+                        <span class="card-title">Kanban Board</span>
+                    </div>
+                    <div class="last-updated" id="kanban-updated">Lade...</div>
+                </div>
+                <div id="kanban-content">
+                    <div class="loading-skeleton"></div>
+                    <div class="loading-skeleton"></div>
+                    <div class="loading-skeleton"></div>
+                </div>
+            </div>
+            
+            <!-- Project Roadmap -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title-section">
+                        <span class="card-icon">🗺️</span>
+                        <span class="card-title">Project Roadmap</span>
+                    </div>
+                    <div class="last-updated" id="roadmap-updated">Lade...</div>
+                </div>
+                <div id="roadmap-content">
+                    <div class="loading-skeleton"></div>
+                    <div class="loading-skeleton"></div>
+                    <div class="loading-skeleton"></div>
+                </div>
+            </div>
+            
+            <!-- BMad Tasks -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title-section">
+                        <span class="card-icon">🧙</span>
+                        <span class="card-title">BMad Tasks</span>
+                    </div>
+                    <div class="last-updated" id="bmad-updated">Lade...</div>
+                </div>
+                <div id="bmad-content">
+                    <div class="loading-skeleton"></div>
+                    <div class="loading-skeleton"></div>
+                    <div class="loading-skeleton"></div>
+                </div>
+            </div>
+            
+            <!-- Epics Overview -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title-section">
+                        <span class="card-icon">🎯</span>
+                        <span class="card-title">Epics</span>
+                    </div>
+                    <div class="last-updated" id="epics-updated">Lade...</div>
+                </div>
+                <div id="epics-content">
+                    <div class="loading-skeleton"></div>
+                    <div class="loading-skeleton"></div>
+                    <div class="loading-skeleton"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Live Metrics -->
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-value" id="progress-metric">--</div>
+                <div class="metric-label">Fortschritt %</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value" id="tasks-metric">--</div>
+                <div class="metric-label">Offene Tasks</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value" id="epics-metric">--</div>
+                <div class="metric-label">Aktive Epics</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value" id="agents-metric">--</div>
+                <div class="metric-label">BMad Agents</div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let autoRefreshInterval = null;
+        let isAutoRefreshActive = false;
+        
+        // File paths configuration
+        const filePaths = {
+            kanban: '../docs/project-management/02-kanban-board.md',
+            roadmap: '../docs/project-management/01-project-roadmap.md',
+            wbs: '../docs/project-management/06-work-breakdown-structure.md',
+            bmadTasks: '../.bmad-core/tasks/',
+            epics: '../docs/epics/'
+        };
+        
+        // API Configuration
+        const API_BASE = 'http://localhost:3001/api';
+        let isServerMode = false;
+        
+        // Check if server is available
+        async function checkServerAvailability() {
+            try {
+                const response = await fetch(`${API_BASE}/config`);
+                isServerMode = response.ok;
+                return isServerMode;
+            } catch (error) {
+                isServerMode = false;
+                return false;
+            }
+        }
+        
+        // Real file reading via API server
+        async function readMarkdownFile(path) {
+            try {
+                if (isServerMode) {
+                    const response = await fetch(`${API_BASE}/file?path=${encodeURIComponent(path)}`);
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        return result.content;
+                    } else {
+                        throw new Error(result.error);
+                    }
+                } else {
+                    // Fallback: Simulated data when server is not available
+                    const sampleData = {
+                        kanban: `# Kanban Board\n\n## To Do\n- [ ] MongoDB Integration (13 SP)\n- [ ] AI Pattern Recognition (21 SP)\n\n## In Progress\n- [x] Garmin Developer Account (5 SP)\n- [x] Vercel Platform Setup (8 SP)\n\n## Done\n- [x] React/TypeScript Setup (3 SP)\n- [x] UI Component Library (5 SP)`,
+                        roadmap: `# Project Roadmap\n\n## Phase 1: Foundation (Weeks 1-4)\n- Infrastructure Setup\n- Core Components\n\n## Phase 2: AI Core (Weeks 5-8)\n- Pattern Recognition\n- Recommendation Engine\n\n## Phase 3: Production (Weeks 9-12)\n- Advanced Features\n- Mobile App`,
+                        epic1: `# Epic: AI Agent Orchestration\n\n## Status: In Progress\n## Story Points: 89\n\n### User Stories:\n- [ ] Agent Communication Framework\n- [ ] Task Distribution System\n- [x] Basic Agent Setup`,
+                        epic2: `# Epic: Garmin Integration\n\n## Status: Planning\n## Story Points: 55\n\n### User Stories:\n- [ ] API Authentication\n- [ ] Data Synchronization\n- [ ] Real-time Updates`
+                    };
+                    
+                    // Simulate network delay
+                    await new Promise(resolve => setTimeout(resolve, 300 + Math.random() * 500));
+                    
+                    if (path.includes('kanban')) return sampleData.kanban;
+                    if (path.includes('roadmap')) return sampleData.roadmap;
+                    if (path.includes('epic-ai')) return sampleData.epic1;
+                    if (path.includes('epic-garmin')) return sampleData.epic2;
+                    
+                    return `# ${path}\n\n⚠️ Server nicht verfügbar - Beispieldaten werden angezeigt`;
+                }
+            } catch (error) {
+                throw new Error(`Fehler beim Laden von ${path}: ${error.message}`);
+            }
+        }
+        
+        // Load all data via API
+        async function loadDashboardData() {
+            if (isServerMode) {
+                try {
+                    const response = await fetch(`${API_BASE}/dashboard`);
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        return result;
+                    } else {
+                        throw new Error('API Fehler: ' + result.error);
+                    }
+                } catch (error) {
+                    console.warn('API nicht verfügbar, verwende Fallback-Daten:', error);
+                    isServerMode = false;
+                    return null;
+                }
+            }
+            return null;
+        }
+        
+        // Parse markdown content and extract tasks
+        function parseTasksFromMarkdown(content) {
+            const tasks = [];
+            const lines = content.split('\n');
+            
+            for (const line of lines) {
+                // Parse checkbox tasks
+                const taskMatch = line.match(/^\s*-\s*\[([ x])\]\s*(.+?)(?:\s*\((\d+)\s*SP\))?/);
+                if (taskMatch) {
+                    const [, checked, text, points] = taskMatch;
+                    tasks.push({
+                        text: text.trim(),
+                        status: checked === 'x' ? 'done' : 'todo',
+                        points: points ? parseInt(points) : 0
+                    });
+                }
+                
+                // Parse status indicators
+                const statusMatch = line.match(/##\s*Status:\s*(.+)/);
+                if (statusMatch) {
+                    const status = statusMatch[1].toLowerCase();
+                    if (tasks.length > 0) {
+                        tasks[tasks.length - 1].status = status.includes('progress') ? 'progress' : 
+                                                        status.includes('done') ? 'done' : 
+                                                        status.includes('review') ? 'review' : 'todo';
+                    }
+                }
+            }
+            
+            return tasks;
+        }
+        
+        // Update card content
+        function updateCard(cardId, content, updateTimeId) {
+            const cardContent = document.getElementById(cardId);
+            const updateTime = document.getElementById(updateTimeId);
+            
+            if (content.error) {
+                cardContent.innerHTML = `<div class="error-message">${content.error}</div>`;
+            } else {
+                const tasks = parseTasksFromMarkdown(content.data);
+                let html = '';
+                
+                tasks.forEach(task => {
+                    html += `
+                        <div class="task-item">
+                            <div class="task-status status-${task.status}"></div>
+                            <div class="task-text">${task.text}</div>
+                            ${task.points ? `<div class="task-points">${task.points}</div>` : ''}
+                        </div>
+                    `;
+                });
+                
+                if (html === '') {
+                    html = '<div class="task-item"><div class="task-text">Keine Tasks gefunden</div></div>';
+                }
+                
+                cardContent.innerHTML = html;
+            }
+            
+            updateTime.textContent = new Date().toLocaleTimeString();
+        }
+        
+        // Load data for a specific card
+        async function loadCardData(cardType, filePath, cardId, updateTimeId) {
+            try {
+                const content = await readMarkdownFile(filePath);
+                updateCard(cardId, { data: content }, updateTimeId);
+                return { success: true, tasksCount: parseTasksFromMarkdown(content).length };
+            } catch (error) {
+                updateCard(cardId, { error: error.message }, updateTimeId);
+                return { success: false, error: error.message };
+            }
+        }
+        
+        // Load all dashboard data
+        async function loadAllData() {
+            const refreshBtn = document.querySelector('.btn');
+            const statusIndicator = document.getElementById('refresh-status');
+            
+            refreshBtn.classList.add('loading');
+            refreshBtn.disabled = true;
+            statusIndicator.className = 'status-indicator status-loading';
+            
+            try {
+                // Check server availability first
+                await checkServerAvailability();
+                
+                if (isServerMode) {
+                    // Use API to load all data at once
+                    const dashboardData = await loadDashboardData();
+                    
+                    if (dashboardData) {
+                        // Update cards with real data
+                        if (dashboardData.data.kanban && dashboardData.data.kanban.success) {
+                            updateCard('kanban-content', { data: dashboardData.data.kanban.content }, 'kanban-updated');
+                        }
+                        if (dashboardData.data.roadmap && dashboardData.data.roadmap.success) {
+                            updateCard('roadmap-content', { data: dashboardData.data.roadmap.content }, 'roadmap-updated');
+                        }
+                        
+                        // Update BMad tasks from directory scan
+                        if (dashboardData.data.bmadTasks && dashboardData.data.bmadTasks.success) {
+                            const taskFiles = dashboardData.data.bmadTasks.files.slice(0, 5);
+                            let bmadContent = '# BMad Tasks\n\n';
+                            taskFiles.forEach(file => {
+                                bmadContent += `- [ ] ${file.name.replace('.md', '')} (${Math.floor(file.size/100)} SP)\n`;
+                            });
+                            updateCard('bmad-content', { data: bmadContent }, 'bmad-updated');
+                        }
+                        
+                        // Update Epics from directory scan
+                        if (dashboardData.data.epics && dashboardData.data.epics.success) {
+                            const epicFiles = dashboardData.data.epics.files.slice(0, 4);
+                            let epicsContent = '# Aktive Epics\n\n';
+                            epicFiles.forEach(file => {
+                                const status = file.name.includes('ai') ? 'progress' : 'todo';
+                                epicsContent += `- [${status === 'progress' ? 'x' : ' '}] ${file.name.replace('.md', '').replace('epic-', '')} (${Math.floor(file.size/200)} SP)\n`;
+                            });
+                            updateCard('epics-content', { data: epicsContent }, 'epics-updated');
+                        }
+                        
+                        // Update metrics with real data
+                        if (dashboardData.metrics) {
+                            document.getElementById('progress-metric').textContent = dashboardData.metrics.progressPercentage;
+                            document.getElementById('tasks-metric').textContent = dashboardData.metrics.pendingTasks;
+                            document.getElementById('epics-metric').textContent = dashboardData.data.epics?.files?.length || '4';
+                            document.getElementById('agents-metric').textContent = dashboardData.data.bmadTasks?.files?.length || '10';
+                        }
+                        
+                        statusIndicator.className = 'status-indicator status-success';
+                        console.log('✅ Echte .md-Dateien erfolgreich geladen!');
+                        return;
+                    }
+                }
+                
+                // Fallback: Load individual cards with sample data
+                console.log('⚠️ Server nicht verfügbar - verwende Beispieldaten');
+                const promises = [
+                    loadCardData('kanban', filePaths.kanban, 'kanban-content', 'kanban-updated'),
+                    loadCardData('roadmap', filePaths.roadmap, 'roadmap-content', 'roadmap-updated'),
+                    loadCardData('bmad', '../.bmad-core/tasks/create-doc.md', 'bmad-content', 'bmad-updated'),
+                    loadCardData('epics', '../docs/epics/epic-ai-agent-orchestration.md', 'epics-content', 'epics-updated')
+                ];
+                
+                const results = await Promise.all(promises);
+                
+                // Update metrics with fallback data
+                const totalTasks = results.reduce((sum, result) => sum + (result.tasksCount || 0), 0);
+                const completedTasks = Math.floor(totalTasks * 0.34);
+                
+                document.getElementById('progress-metric').textContent = '34';
+                document.getElementById('tasks-metric').textContent = totalTasks - completedTasks;
+                document.getElementById('epics-metric').textContent = '4';
+                document.getElementById('agents-metric').textContent = '10';
+                
+                statusIndicator.className = 'status-indicator status-success';
+                
+            } catch (error) {
+                console.error('Fehler beim Laden der Daten:', error);
+                statusIndicator.className = 'status-indicator status-error';
+            } finally {
+                refreshBtn.classList.remove('loading');
+                refreshBtn.disabled = false;
+            }
+        }
+        
+        // Toggle auto-refresh
+        function toggleAutoRefresh() {
+            const btn = document.querySelector('.btn:nth-child(2)');
+            const text = document.getElementById('auto-refresh-text');
+            
+            if (isAutoRefreshActive) {
+                clearInterval(autoRefreshInterval);
+                isAutoRefreshActive = false;
+                text.textContent = '⏰ Auto-Refresh aktivieren';
+                btn.style.background = '#3498db';
+            } else {
+                autoRefreshInterval = setInterval(loadAllData, 30000); // Every 30 seconds
+                isAutoRefreshActive = true;
+                text.textContent = '⏸️ Auto-Refresh deaktivieren';
+                btn.style.background = '#27ae60';
+            }
+        }
+        
+        // Show file browser
+        function showFileBrowser() {
+            const browser = document.getElementById('file-browser');
+            const fileList = document.getElementById('file-list');
+            
+            browser.style.display = browser.style.display === 'none' ? 'block' : 'none';
+            
+            if (browser.style.display === 'block') {
+                // Simulate file listing
+                const files = [
+                    '📋 02-kanban-board.md',
+                    '🗺️ 01-project-roadmap.md',
+                    '📊 06-work-breakdown-structure.md',
+                    '🎯 epic-ai-agent-orchestration.md',
+                    '🔗 epic-garmin-integration.md',
+                    '📝 epic-daily-entry-refactor.md',
+                    '🧪 epic-testing-infrastructure.md'
+                ];
+                
+                fileList.innerHTML = files.map(file => 
+                    `<div class="file-item" onclick="selectFile('${file}')">${file}</div>`
+                ).join('');
+            }
+        }
+        
+        // Select file from browser
+        function selectFile(fileName) {
+            const items = document.querySelectorAll('.file-item');
+            items.forEach(item => item.classList.remove('selected'));
+            event.target.classList.add('selected');
+            
+            // Simulate loading selected file
+            console.log('Ausgewählte Datei:', fileName);
+        }
+        
+        // Update connection status in header
+        function updateConnectionStatus() {
+            const statusElement = document.getElementById('connection-status');
+            const infoElement = document.getElementById('server-info');
+            
+            if (isServerMode) {
+                statusElement.textContent = '🟢 Live-Synchronisation mit .md Dateien aktiv';
+                statusElement.style.color = '#27ae60';
+                infoElement.innerHTML = `
+                    <div>✅ Node.js Server läuft auf Port 3001</div>
+                    <div>📁 Echte .md-Dateien werden gelesen</div>
+                    <div>🔄 Auto-Refresh verfügbar</div>
+                `;
+            } else {
+                statusElement.textContent = '🟡 Offline-Modus - Beispieldaten werden angezeigt';
+                statusElement.style.color = '#f39c12';
+                infoElement.innerHTML = `
+                    <div>⚠️ Node.js Server nicht verfügbar</div>
+                    <div>💡 Starte Server mit: <code>node md-file-reader.js</code></div>
+                    <div>📊 Fallback-Daten werden verwendet</div>
+                `;
+            }
+        }
+        
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Check server first
+            await checkServerAvailability();
+            updateConnectionStatus();
+            
+            // Load data
+            await loadAllData();
+            
+            // Set up periodic refresh indicator
+            setInterval(() => {
+                if (isAutoRefreshActive) {
+                    const indicator = document.getElementById('refresh-status');
+                    indicator.style.animation = 'pulse 0.5s ease-in-out';
+                    setTimeout(() => indicator.style.animation = '', 500);
+                }
+            }, 5000);
+            
+            // Periodic server check (every 30 seconds)
+            setInterval(async () => {
+                const wasServerMode = isServerMode;
+                await checkServerAvailability();
+                if (wasServerMode !== isServerMode) {
+                    updateConnectionStatus();
+                    console.log(`Server-Status geändert: ${isServerMode ? 'Online' : 'Offline'}`);
+                }
+            }, 30000);
+        });
+        
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'r') {
+                e.preventDefault();
+                loadAllData();
+            }
+            if (e.ctrlKey && e.key === 't') {
+                e.preventDefault();
+                toggleAutoRefresh();
+            }
+        });
+    </script>
+</body>
+</html>
